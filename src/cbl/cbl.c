@@ -12,10 +12,17 @@ void _start(){
 	uint8_t recv;
 	UART_Init(1);
 	
-	*((uint8_t*)GPIO_DIR) &= ~0x10;
-	*((uint8_t*)GPIO_PULL) &= ~0x10;
-	*((uint8_t*)GPIO_OUT) &= ~0x10;
-	
+	*((uint8_t*)(GPIO_BASE + 0x145)) = 0x0C;
+	*((uint16_t*)(GPIO_BASE + 0x08)) = 0xFFFF;
+	*((uint16_t*)(GPIO_BASE + 0x0A)) = 0xFFFF;
+	*((uint8_t*)(GPIO_BASE + 0x110)) = 0xFF;
+	*((uint8_t*)(GPIO_BASE + 0x111)) = 0xFF;
+	*((uint16_t*)(GPIO_BASE + 0x112)) = 0xFFFF;
+	*((uint8_t*)(GPIO_BASE + 0xE6)) = 0x20;
+	*((uint32_t*)(GPIO_BASE + 0x17C)) |= 0xDFF;
+	*((uint32_t*)(GPIO_BASE + 0x1AC)) |= 0x100;
+	*((uint32_t*)(GPIO_BASE + 0x1D0)) |= 0x100;
+
 	while(1){
 		printString("Welcome to Crappy BootLoader (CBL) v0.01 (build 6)\r\n\n");
 		printString("1. Poke memory\r\n");
@@ -57,7 +64,7 @@ char lut[] = "0123456789ABCDEF";
 char* itoa(uint32_t val, char* buf){
 	int i = 0;
 	for(; i < 8; i++){
-		buf[i] = val & 0xF;
+		buf[i] = lut[val & 0xF];
 		val = val >> 4;
 	}
 	buf[8] = '\0';
