@@ -3,9 +3,6 @@
 #define	IO_BASE			(void*)0x10000000
 
 #define GPIO_BASE		IO_BASE + 0x1100
-#define GPIO_OUT		GPIO_BASE + 0x08
-#define GPIO_DIR		GPIO_BASE + 0x30
-#define GPIO_PULL		GPIO_BASE + 0x38
 
 #define UART_BASE		IO_BASE + 0x1800
 #define	UART(n)			UART_BASE + (n << 5)
@@ -16,3 +13,6 @@
 
 #define UART_TX_BUSY	0x02
 #define UART_RX_VALID	0x04
+
+#define PWR_BASE		IO_BASE + 0xB000
+#define PWR_REG			PWR_BASE + 0x64
