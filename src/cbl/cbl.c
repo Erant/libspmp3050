@@ -1,6 +1,7 @@
 #include <stdint.h>
-#include "uart.h"
 #include "../spmp3050/spmp3050.h"
+#include "uart.h"
+#include "pwr.h"
 
 void printString(char* str);
 char* itoa(uint32_t val, char* buf);
@@ -21,7 +22,7 @@ void _start(){
 		do{
 			while(UART_ReceiveBufferEmpty(1));
 			recv = UART_ReceiveByte(1);
-		}while(recv < 0x31 || recv > 0x36);
+		}while(recv < 0x31 || recv > 0x34);
 		
 		recv -= 0x30;
 		switch(recv){
