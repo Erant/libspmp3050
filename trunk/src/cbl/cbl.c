@@ -2,12 +2,47 @@
 #include "../spmp3050/spmp3050.h"
 #include "uart.h"
 #include "pwr.h"
+#include "xmodem.h"
 
 void printString(char* str);
 void printMemory(uint32_t* ptr);
 char* itoa(uint32_t val, char* buf);
 
 char itoa_buf[9];
+
+
+// -- convenience wrappers to help with the xmodem implementation.
+
+// returns a single byte 0..255, can return -1 if 'timeout'
+int serialGetByte()  
+{
+  unsigned char recv;
+
+  // you could turn this into a for loop that also checks the current time, to introduce a timeout.
+  while(UART_ReceiveBufferEmpty(1)) 
+    ;
+  recv = UART_ReceiveByte(1);
+  return recv;
+}
+
+void serialPutByte( unsigned char c )
+{
+  UART_SendByte( 1, c );
+}
+
+unsigned char* xmodemWritePointer;
+
+int xmodemWriterHelper( unsigned char * data, int size )
+{
+  // copy received data into the xmodemWritePointer location, and advance it.
+  while(size--)
+    {
+      *xmodemWritePointer = *data;
+      data++;
+      xmodemWritePointer++;
+    }
+  return 0;
+}
 
 
 void _start(){
@@ -21,10 +56,11 @@ void _start(){
 		printString("3. Upload binary\r\n");
 		printString("4. Continue boot\r\n");
 		printString("5. Turn unit off\r\n\n");
+		printString("6. XMODEM hackery\r\n\n");
 		do{
 			while(UART_ReceiveBufferEmpty(1));
 			recv = UART_ReceiveByte(1);
-		}while(recv < 0x31 || recv > 0x35);
+		}while(recv < '1' || recv > '6');
 		recv -= 0x30;
 		switch(recv){
 			case 1:	// POKE
@@ -58,6 +94,12 @@ void _start(){
 			case 5: // Continue boot.
 				PWR_UnitOff();
 				break;
+            case 6:
+              // xmodem transfer.
+              xmodemInit( serialPutByte, serialGetByte );
+              xmodemWritePointer = 0x100;
+              xmodemReceive( xmodemWriterHelper );
+              break;
 		}
 	}
 }
