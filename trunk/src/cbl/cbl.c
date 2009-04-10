@@ -60,6 +60,7 @@ void invalidateICache(){
 int main(){
 	uint8_t recv;
 	uint32_t prev_poke = 0, prev_peek = 0, offset = 0x24003000;
+	uint32_t prev_gpio = 0, gpio;
 	UART_Init(1);
 	printString("\r\n");
 	
@@ -69,7 +70,8 @@ int main(){
 		printString("2. Peek memory\r\n");
 		printString("3. Upload binary\r\n");
 		printString("4. Continue boot\r\n");
-		printString("5. Turn unit off\r\n\n");
+		printString("5. Turn unit off\r\n");
+		printString("6. Show GPIO status\r\n\n");
 		do{
 			while(UART_ReceiveBufferEmpty(1));
 			recv = UART_ReceiveByte(1);
@@ -142,6 +144,16 @@ int main(){
 				PWR_UnitOff();
 				while(1);
 				break;
+			case 6:
+				while(UART_ReceiveBufferEmpty(1)){
+					gpio = *((uint32_t*)0x1000B06C);
+					if(gpio != prev_gpio){
+						printString(itoa(gpio ^ prev_gpio, itoa_buf));
+						printString("\r\n");
+					}
+					prev_gpio = gpio;
+				}
+				UART_ReceiveByte(1);
 		}
 	}
 }
