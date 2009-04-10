@@ -24,8 +24,7 @@ int serialGetByte()
   unsigned char recv;
 
   // you could turn this into a for loop that also checks the current time, to introduce a timeout.
-  while(UART_ReceiveBufferEmpty(1)) 
-    ;
+  while(UART_ReceiveBufferEmpty(1)) ;
   recv = UART_ReceiveByte(1);
   return recv;
 }
@@ -49,6 +48,14 @@ int xmodemWriterHelper( unsigned char * data, int size )
   return 0;
 }
 
+void flushDCache(){
+	__asm__("1:			MRC p15, 0, r15, c7, c10, 3\n\t"
+			"			BNE 1b");  // test and clean
+}
+
+void invalidateICache(){
+	__asm__("MCR p15, 0, r15, c7, c5, 0");
+}
 
 int main(){
 	uint8_t recv;
@@ -73,9 +80,8 @@ int main(){
 				printString("Enter an 8 digit hexadecimal address to poke (0x");
 				printString(itoa(prev_poke, itoa_buf));
 				printString(") :\r\n0x");				
-				if(receiveString(rx_buf) < 0)
+				if(receiveString(rx_buf) == NULL)
 					break;
-					
 				if(*rx_buf)
 					prev_poke = atoi(rx_buf);
 				
@@ -87,7 +93,7 @@ int main(){
 				printString("Enter an 8 digit hexadecimal address to peek (0x");
 				printString(itoa(prev_peek, itoa_buf));
 				printString(") :\r\n0x");
-				if(receiveString(rx_buf) < 0)
+				if(receiveString(rx_buf) == NULL)
 					break;
 				if(*rx_buf)
 					prev_peek = atoi(rx_buf);
@@ -104,11 +110,12 @@ int main(){
 				printString("Enter an 8 digit hexadecimal address to load your binary to (0x");
 				printString(itoa(offset, itoa_buf));
 				printString(") :\r\n0x");
-				if(receiveString(rx_buf) < 0)
+				if(receiveString(rx_buf) == NULL)
 					break;
 				if(*rx_buf)
 					offset = atoi(rx_buf);
-					
+				
+				for(int i = 0; i < 0xFFFFFF; i++);
 				// xmodem transfer.
 				xmodemInit( serialPutByte, serialGetByte );
 				xmodemWritePointer = (uint8_t*)offset;
@@ -119,11 +126,16 @@ int main(){
 				printString("Enter an 8 digit hexadecimal address to jump to (0x");
 				printString(itoa(offset, itoa_buf));
 				printString(") :\r\n0x");
-				if(receiveString(rx_buf) < 0)
+				if(receiveString(rx_buf) == NULL)
 					break;
 				if(*rx_buf)
 					offset = atoi(rx_buf);
-					
+				
+				flushDCache();
+				invalidateICache();
+				printString("\r\nJumping to 0x");
+				printString(itoa(offset, itoa_buf));
+				printString(", bye bye!\r\n");
 				((void (*)(void))offset)();
 				break;
 			case 5: // Abort boot.
@@ -182,7 +194,7 @@ char* receiveString(char* buf){
 		
 		if(*buf == 0x03){	// CTRL + C
 			*buf = 0;
-			return (char*)-1;
+			return NULL;
 		}
 		
 		if(*buf == '\b' && buf > ret){
