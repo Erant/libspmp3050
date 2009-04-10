@@ -50,11 +50,10 @@ int xmodemWriterHelper( unsigned char * data, int size )
 }
 
 
-void _start(){
+int main(){
 	uint8_t recv;
 	uint32_t prev_poke = 0, prev_peek = 0, offset = 0x24003000;
 	UART_Init(1);
-	PWR_UnitOn();
 	printString("\r\n");
 	
 	while(1){
