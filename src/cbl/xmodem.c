@@ -249,7 +249,8 @@ int xmodemInTime(unsigned short timeout)
 {
     int c=-1;
 
-    while( (timeout--) && ((c=xmodemIn()) < 0) )
+    //while( (timeout--) && ((c=xmodemIn()) < 0) )
+	while((c = xmodemIn()) < 0)
       {
         // fixme: we do not have this: timerPause(1);
       }
