@@ -3,9 +3,6 @@
 
 void xmodemInit(void (*sendbyte_func)(unsigned char c), int (*getbyte_func)(void));
 long xmodemReceive( int (*write)(unsigned char* buffer, int size) );
-int xmodemInTime(unsigned short timeout);
-void xmodemInFlush(void);
-int xmodemCrcCheck(int crcflag, const unsigned char *buffer, int size);
 
 #define XMODEM_ERROR_OUTOFSYNC -1
 #define XMODEM_ERROR_REMOTECANCEL -2
