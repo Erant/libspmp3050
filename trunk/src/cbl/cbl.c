@@ -57,10 +57,16 @@ void invalidateICache(){
 	__asm__("MCR p15, 0, r15, c7, c5, 0");
 }
 
+int strlen(char* str){
+	char* start = str;
+	while(*str != '\0')
+		str++;
+	return str - start - 1;
+}
+
 int main(){
 	uint8_t recv;
 	uint32_t prev_poke = 0, prev_peek = 0, offset = 0x24003000;
-	uint32_t prev_gpio = 0, gpio;
 	UART_Init(1);
 	printString("\r\n");
 	
@@ -69,14 +75,17 @@ int main(){
 		printString("1. Poke memory\r\n");
 		printString("2. Peek memory\r\n");
 		printString("3. Upload binary\r\n");
-		printString("4. Continue boot\r\n");
+		printString("4. Jump to offset\r\n");
 		printString("5. Turn unit off\r\n");
-		printString("6. Show GPIO status\r\n\n");
+		
+		// Wait for a selection
 		do{
 			while(UART_ReceiveBufferEmpty(1));
 			recv = UART_ReceiveByte(1);
-		}while(recv < '1' || recv > '6');
+		}while(recv < '1' || recv > '5');
 		recv -= 0x30;
+		
+		
 		switch(recv){
 			case 1:	// POKE
 				printString("Enter an 8 digit hexadecimal address to poke (0x");
@@ -87,9 +96,22 @@ int main(){
 				if(*rx_buf)
 					prev_poke = atoi(rx_buf);
 				
-				printString("\r\nEnter a 2 digit hexadecimal number to poke:\r\n0x");
-				*((uint8_t*)prev_poke) = atoi(receiveString(rx_buf));
+				printString("\r\nEnter a hexadecimal number to poke:\r\n0x");
+				
+				uint32_t poke = atoi(receiveString(rx_buf));
 				printString("\r\n");
+				
+				// Check what kind of input we got. 2, 4 or 8 bytes.
+				int len = strlen(rx_buf);
+				if(len <= 2){	
+					*((uint8_t*)prev_poke) = (uint8_t)poke;
+					break;
+				}
+				if(len <= 4){
+					*((uint16_t*)prev_poke) = (uint16_t)poke;
+					break;
+				}
+				*((uint32_t*)prev_poke) = poke;
 				break;
 			case 2: // PEEK
 				printString("Enter an 8 digit hexadecimal address to peek (0x");
@@ -144,16 +166,6 @@ int main(){
 				GPIO_UnitOff();
 				while(1);
 				break;
-			case 6:
-				while(UART_ReceiveBufferEmpty(1)){
-					gpio = *((uint32_t*)0x1000B06C);
-					if(gpio != prev_gpio){
-						printString(itoa(~gpio, itoa_buf));
-						printString("\r\n");
-					}
-					prev_gpio = gpio;
-				}
-				UART_ReceiveByte(1);
 		}
 	}
 }
@@ -211,6 +223,7 @@ char* receiveString(char* buf){
 		
 		if(*buf == '\b' && buf > ret){
 			printString("\b \b");
+			buf--;
 		}
 		else
 		{
@@ -223,15 +236,17 @@ char* receiveString(char* buf){
 
 uint32_t atoi(char* buf){
 	uint32_t ret = 0;
+	char tmp;
 	while((*buf >= '0' && *buf <= '9') || (*buf >= 'a' && *buf <= 'f') || (*buf >= 'A' && *buf <= 'F')){
-		if(*buf >= 'a' && *buf <= 'f')
-			*buf -= 'a' - 'A';
-		if(*buf >= 'A' && *buf <= 'F')
-			*buf -= 0x7;
-		*buf -= 0x30;
+		tmp = *buf;
+		if(tmp >= 'a' && tmp <= 'f')
+			tmp -= 'a' - 'A';
+		if(tmp >= 'A' && tmp <= 'F')
+			tmp -= 0x7;
+		tmp -= 0x30;
 		
 		ret = ret << 4;
-		ret |= *buf;
+		ret |= tmp;
 		
 		buf++;
 	}
@@ -254,12 +269,4 @@ char* ctoa(uint8_t val, char* buf){
 	buf[1] = lut[val & 0xF];
 	buf[0] = lut[(val >> 4) & 0xF];
 	return buf;
-}
-
-void printMemory(uint32_t* ptr){
-	printString("0x");
-	printString(itoa((uint32_t)ptr, itoa_buf));
-	printString(": 0x");
-	printString(itoa(*ptr, itoa_buf));
-	printString("\r\n");
 }
