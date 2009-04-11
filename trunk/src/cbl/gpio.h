@@ -1,7 +1,8 @@
 #ifndef _GPIO_H
 #define _GPIO_H
 
-void GPIO_UnitOn();
-void GPIO_UnitOff();
+extern void GPIO_Init();
+extern void GPIO_UnitOn();
+extern void GPIO_UnitOff();
 
 #endif
