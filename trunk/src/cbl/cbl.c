@@ -2,7 +2,7 @@
 #include <stddef.h>
 #include "../spmp3050/spmp3050.h"
 #include "uart.h"
-#include "pwr.h"
+#include "gpio.h"
 #include "xmodem.h"
 
 void printString(char* str);
@@ -141,14 +141,14 @@ int main(){
 				((void (*)(void))offset)();
 				break;
 			case 5: // Abort boot.
-				PWR_UnitOff();
+				GPIO_UnitOff();
 				while(1);
 				break;
 			case 6:
 				while(UART_ReceiveBufferEmpty(1)){
 					gpio = *((uint32_t*)0x1000B06C);
 					if(gpio != prev_gpio){
-						printString(itoa(gpio ^ prev_gpio, itoa_buf));
+						printString(itoa(~gpio, itoa_buf));
 						printString("\r\n");
 					}
 					prev_gpio = gpio;
