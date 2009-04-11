@@ -2,7 +2,7 @@
 
 // Init the specified UART. Currently uses 'magic' values to init the registers.
 void UART_Init(int uart){
-	uint8_t* uart_base = UART(uart);
+	volatile uint8_t* uart_base = UART(uart);
 	uart_base[0x0] = 0x68;
 	uart_base[0x1] = 0x00;
 	uart_base[0x4] = 0xD0;
