@@ -67,6 +67,7 @@ int strlen(char* str){
 int main(){
 	uint8_t recv;
 	uint32_t prev_poke = 0, prev_peek = 0, offset = 0x24003000;
+	uint32_t r0, r1, r2, r3;
 	UART_Init(1);
 	printString("\r\n");
 	
@@ -75,14 +76,15 @@ int main(){
 		printString("1. Poke memory\r\n");
 		printString("2. Peek memory\r\n");
 		printString("3. Upload binary\r\n");
-		printString("4. Jump to offset\r\n");
-		printString("5. Turn unit off\r\n");
+		printString("4. Call function\r\n");
+		printString("5. Jump to offset\r\n");
+		printString("6. Turn unit off\r\n");
 		
 		// Wait for a selection
 		do{
 			while(UART_ReceiveBufferEmpty(1));
 			recv = UART_ReceiveByte(1);
-		}while(recv < '1' || recv > '5');
+		}while(recv < '1' || recv > '6');
 		recv -= 0x30;
 		
 		
@@ -146,7 +148,33 @@ int main(){
 				xmodemReceive( xmodemWriterHelper );
 				
 				break;
-			case 4: // Continue boot.
+			case 4: // Call function
+				printString("R0: 0x");
+				if(receiveString(rx_buf) == NULL)
+					break;
+				r0 = atoi(rx_buf);
+				printString("\r\n");
+				
+				printString("R1: 0x");
+				if(receiveString(rx_buf) == NULL)
+					break;
+				r1 = atoi(rx_buf);
+				printString("\r\n");
+				
+				printString("R2: 0x");
+				if(receiveString(rx_buf) == NULL)
+					break;
+				r2 = atoi(rx_buf);
+				printString("\r\n");
+				
+				printString("R3: 0x");
+				if(receiveString(rx_buf) == NULL)
+					break;
+				r3 = atoi(rx_buf);
+				printString("\r\n");
+				
+				
+			case 5: // Continue boot.
 				printString("Enter an 8 digit hexadecimal address to jump to (0x");
 				printString(itoa(offset, itoa_buf));
 				printString(") :\r\n0x");
@@ -155,14 +183,24 @@ int main(){
 				if(*rx_buf)
 					offset = atoi(rx_buf);
 				
-				flushDCache();
-				invalidateICache();
+				
 				printString("\r\nJumping to 0x");
 				printString(itoa(offset, itoa_buf));
 				printString(", bye bye!\r\n");
-				((void (*)(void))offset)();
+				
+				flushDCache();
+				invalidateICache();
+				__asm__ ("	LDR r0, %0\n"
+						"	LDR r1, %1\n"
+						"	LDR r2, %2\n"
+						"	LDR r3, %3\n"
+						"	BLX %4\n"
+						: // No output registers
+						: "m" (r0), "m" (r1), "m" (r2), "m" (r3), "r" (offset)
+						: "r0", "r1", "r2", "r3"
+						);
 				break;
-			case 5: // Abort boot.
+			case 6: // Abort boot.
 				GPIO_UnitOff();
 				while(1);
 				break;
