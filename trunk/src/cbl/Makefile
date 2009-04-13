@@ -9,3 +9,6 @@ cbl.elf:	$(OBJECTS)
 
 %.o:	%.c
 	$(GCCPREFIX)-gcc -Wall -c -mcpu=arm926ej-s -O2 -std=c99 $<
+
+clean:	
+	rm -f $(OBJECTS) cbl.bin cbl.elf
