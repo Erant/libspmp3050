@@ -5,6 +5,6 @@ void _start() __attribute__((noreturn));
 
 void _start(){
 	GPIO_Init();
-	GPIO_UnitOn();
+	GPIO_SetPower(1);
 	main();
 }

@@ -2,7 +2,6 @@
 #define _GPIO_H
 
 extern void GPIO_Init();
-extern void GPIO_UnitOn();
-extern void GPIO_UnitOff();
+void GPIO_SetPower(int val);
 
 #endif
