@@ -34,6 +34,16 @@ void serialPutByte( unsigned char c )
   UART_SendByte( 1, c );
 }
 
+extern void stub;
+void dontcall() __attribute__((noreturn));
+
+void dontcall(){
+	__asm__("stub:	LDR r0, tag\n"
+			"		BX r0\n"
+			"tag:	.word _start\n"
+			);
+}
+
 uint8_t* xmodemWritePointer;
 
 int xmodemWriterHelper( unsigned char * data, int size )
@@ -49,11 +59,13 @@ int xmodemWriterHelper( unsigned char * data, int size )
 }
 
 void flushDCache(){
+	// No clobber list, because r15 (PC) is not actually modified.
 	__asm__("1:			MRC p15, 0, r15, c7, c10, 3\n\t"
 			"			BNE 1b");  // test and clean
 }
 
 void invalidateICache(){
+	// No clobber list, because r15 (PC) is not actually modified.
 	__asm__("MCR p15, 0, r15, c7, c5, 0");
 }
 
@@ -66,7 +78,7 @@ int strlen(char* str){
 
 int main(){
 	uint8_t recv;
-	uint32_t prev_poke = 0, prev_peek = 0, offset = 0x24003000;
+	uint32_t prev_poke = 0, prev_peek = 0, offset = 0x24026EB4;
 	uint32_t r0, r1, r2, r3;
 	UART_Init(1);
 	printString("\r\n");
@@ -78,7 +90,8 @@ int main(){
 		printString("3. Upload binary\r\n");
 		printString("4. Call function\r\n");
 		printString("5. Jump to offset\r\n");
-		printString("6. Turn unit off\r\n");
+		printString("6. Inject return stub\r\n");
+		printString("7. Turn unit off\r\n\r\n");
 		
 		// Wait for a selection
 		do{
@@ -86,8 +99,7 @@ int main(){
 			recv = UART_ReceiveByte(1);
 		}while(recv < '1' || recv > '6');
 		recv -= 0x30;
-		
-		
+
 		switch(recv){
 			case 1:	// POKE
 				printString("Enter an 8 digit hexadecimal address to poke (0x");
@@ -172,7 +184,7 @@ int main(){
 					break;
 				r3 = atoi(rx_buf);
 				printString("\r\n");
-				
+				// No break, use the next case.
 				
 			case 5: // Continue boot.
 				printString("Enter an 8 digit hexadecimal address to jump to (0x");
@@ -200,8 +212,25 @@ int main(){
 						: "r0", "r1", "r2", "r3"
 						);
 				break;
-			case 6: // Abort boot.
-				GPIO_UnitOff();
+			case 6:	// Inject the return to CBL stub.
+				printString("Enter an 8 digit hexadecimal address to inject the stub to:\r\n0x");
+				
+				if(receiveString(rx_buf) == NULL)
+					break;
+				
+				printString("\r\n");
+				
+				uint32_t* stub_ptr = (uint32_t*)&stub;
+				uint32_t* dest_ptr = (uint32_t*)atoi(rx_buf);
+				
+				dest_ptr[0] = stub_ptr[0];
+				dest_ptr[1] = stub_ptr[1];
+				dest_ptr[2] = stub_ptr[2];
+				
+				break;	
+			case 7: // Abort boot.
+				printString("Unit is being turned off. Bye bye!\r\n");
+				GPIO_SetPower(0);
 				while(1);
 				break;
 		}
