@@ -60,13 +60,14 @@ int xmodemWriterHelper( unsigned char * data, int size )
 
 void flushDCache(){
 	// No clobber list, because r15 (PC) is not actually modified.
-	__asm__("1:			MRC p15, 0, r15, c7, c10, 3\n\t"
-			"			BNE 1b");  // test and clean
+	__asm__ __volatile__ (
+		"1:			MRC p15, 0, r15, c7, c10, 3\n"
+		"			BNE 1b\n");  // test and clean
 }
 
 void invalidateICache(){
 	// No clobber list, because r15 (PC) is not actually modified.
-	__asm__("MCR p15, 0, r15, c7, c5, 0");
+	__asm__ __volatile__("MCR p15, 0, r15, c7, c5, 0\n");
 }
 
 int strlen(char* str){
@@ -202,7 +203,8 @@ int main(){
 				
 				flushDCache();
 				invalidateICache();
-				__asm__ ("	LDR r0, %0\n"
+				__asm__ __volatile__(
+						"	LDR r0, %0\n"
 						"	LDR r1, %1\n"
 						"	LDR r2, %2\n"
 						"	LDR r3, %3\n"
