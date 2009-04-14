@@ -2,8 +2,10 @@
 #include <stddef.h>
 #include "../spmp3050/spmp3050.h"
 #include "uart.h"
+#include "lcd.h"
 #include "gpio.h"
 #include "xmodem.h"
+#include "util.h"
 
 void printString(char* str);
 char* receiveString(char* buf);
@@ -15,6 +17,8 @@ char* ctoa(uint8_t val, char* buf);
 
 char itoa_buf[9];
 char rx_buf[256];
+
+uint16_t* fb = (uint16_t*)0x24164700;
 
 // -- convenience wrappers to help with the xmodem implementation.
 
@@ -92,13 +96,14 @@ int main(){
 		printString("4. Call function\r\n");
 		printString("5. Jump to offset\r\n");
 		printString("6. Inject return stub\r\n");
-		printString("7. Turn unit off\r\n\r\n");
+		printString("7. Turn unit off\r\n");
+		printString("8. Draw logo to screen\r\n\r\n");
 		
 		// Wait for a selection
 		do{
 			while(UART_ReceiveBufferEmpty(1));
 			recv = UART_ReceiveByte(1);
-		}while(recv < '1' || recv > '6');
+		}while(recv < '1' || recv > '9');
 		recv -= 0x30;
 
 		switch(recv){
@@ -234,6 +239,11 @@ int main(){
 				printString("Unit is being turned off. Bye bye!\r\n");
 				GPIO_SetPower(0);
 				while(1);
+				break;
+			case 8: // LCD crap testing
+				LCD_Init(3);
+				LCD_WriteFramebuffer(fb);
+				LCD_SetBacklight(1);
 				break;
 		}
 	}

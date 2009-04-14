@@ -1,5 +1,5 @@
 include Makefile.config
-OBJECTS=crt0.o gpio.o cbl.o uart.o xmodem.o
+OBJECTS=gpio.o cbl.o uart.o xmodem.o lcd.o util.o crt0.o
 
 cbl.bin:	cbl.elf
 	$(GCCPREFIX)-objcopy -O binary cbl.elf cbl.bin
