@@ -103,7 +103,7 @@ int main(){
 		do{
 			while(UART_ReceiveBufferEmpty(1));
 			recv = UART_ReceiveByte(1);
-		}while(recv < '1' || recv > '9');
+		}while(recv < '1' || recv > '8');
 		recv -= 0x30;
 
 		switch(recv){
