@@ -43,6 +43,12 @@
 #define LCD_RESET_REG	(*(volatile uint8_t*)(LCD_BASE + 0x1B1))
 #define LCD_RESET		0x80
 
+#define DEV_ENABLE              (*(volatile uint8_t*)(IO_BASE + 0x1100))
+
+#define IRQ_FLAG_1		(*(volatile uint8_t*)(IO_BASE + 0x10c0))
+#define IRQ_FLAG_2              (*(volatile uint8_t*)(IO_BASE + 0x10c4))
+#define IRQ_MASK_1              (*(volatile uint8_t*)(IO_BASE + 0x1310))
+#define IRQ_MASK_2              (*(volatile uint8_t*)(IO_BASE + 0x1314))
 
 
 
