@@ -51,7 +51,7 @@
 #define TIMER_COUNTER(n)		(*(volatile uint32_t*)(IO_BASE + 0x1030 + (n << 2)))
 #define TIMER_FLAGS(n)			(*(volatile uint8_t*)(IO_BASE + 0x1040 + n))
 
-#define TIMER_FLAG_REPEAT		0x10;
+#define TIMER_REPEAT			0x10
 
 //--- IRQ ---//
 #define IRQ_FLAG_LO				(*(volatile uint32_t*)(IO_BASE + 0x10C0))

@@ -6,6 +6,7 @@
 #include "gpio.h"
 #include "xmodem.h"
 #include "util.h"
+#include "timer.h"
 
 void printString(char* str);
 char* receiveString(char* buf);
@@ -16,6 +17,8 @@ char* itoa(uint32_t val, char* buf);
 char* ctoa(uint8_t val, char* buf);
 void IRQ_Handler_4(void);
 void IRQ_Handler_5(void);
+
+void (*set_irq_handler)(int, int) = (void (*)(int,int))0x24028910;
 
 char itoa_buf[9];
 char rx_buf[256];
@@ -98,14 +101,14 @@ int main(){
 		printString("4. Call function\r\n");
 		printString("5. Jump to offset\r\n");
 		printString("6. Inject return stub\r\n");
-		printString("7. Turn unit off\r\n");
+		printString("7. Initialize timers\r\n");
 		printString("8. Draw logo to screen\r\n\r\n");
 		
 		// Wait for a selection
 		do{
 			while(UART_ReceiveBufferEmpty(1));
 			recv = UART_ReceiveByte(1);
-		}while(recv < '1' || recv > '9');
+		}while(recv < '1' || recv > '8');
 		recv -= 0x30;
 
 		switch(recv){
@@ -237,27 +240,16 @@ int main(){
 				dest_ptr[2] = stub_ptr[2];
 				
 				break;	
-			case 7: // Abort boot.
-				//printString("Unit is being turned off. Bye bye!\r\n");
-				/*
-				*((uint32_t*)0x24000804) = 0x24026EB4;
-				*((uint32_t*)0x24000110) = (((((uint32_t)IRQ_Handler) - 0x24000110) >> 2) - 2) | 0xEA000000;
-				printString("I wrotez: 0x");
-				printString(itoa(*((uint32_t*)0x24000110), itoa_buf));
-				printString("\r\n");
-				*/
-				//*((uint32_t*)0x2403008C) = (uint32_t)IRQ_Handler_4;
-				*((uint32_t*)0x24000804) = 0x24026EB4;
-				*((uint32_t*)0x2403007C) = (uint32_t)IRQ_Handler_5;
+			case 7: // Do the timer demo.
+				set_irq_handler(4, (int)IRQ_Handler_4);
+				set_irq_handler(5, (int)IRQ_Handler_5);
+				TMR_Init(0, 12000, 10, TIMER_REPEAT);
+				enable_interrupts();
 				break;
 			case 8: // LCD crap testing
 				LCD_Init(3);
 				LCD_WriteFramebuffer(fb);
 				LCD_SetBacklight(1);
-				break;
-			case 9: // Timer shit testing
-				enable_interrupts();
-				TIMER_PERIOD(2) -= 0x10;
 				break;
 		}
 	}
@@ -372,9 +364,19 @@ void clear_interrupt(int nr){
 	IRQ_FLAG_LO |= 1 << nr;
 }
 
+
+char* spinny = "\\-/|";
+
 void IRQ_Handler_4(void){
+	static int index = 0;
 	clear_interrupt(4);
-	UART_FIFO(1) = '4';
+	
+	if(!spinny[index])
+		index = 0;
+	
+	UART_FIFO(1) = '\b';
+	UART_FIFO(1) = spinny[index];
+	index++;
 }
 
 void IRQ_Handler_5(void){
