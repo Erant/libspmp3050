@@ -4,4 +4,6 @@
 void delay_ms(int ms);
 void delay_us(int us);
 
+void enable_interrupts();
+void disable_interrupts();
 #endif
