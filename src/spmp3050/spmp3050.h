@@ -47,9 +47,9 @@
 
 //--- Timers ---//
 #define TIMER_PERIOD(n)			(*(volatile uint16_t*)(IO_BASE + 0x1318 + (n << 1)))
-#define TIMER_ENABLE			(*(volatile uint8_t*)(IO_BASE + 0x1044)
+#define TIMER_ENABLE			(*(volatile uint8_t*)(IO_BASE + 0x1044))
 #define TIMER_COUNTER(n)		(*(volatile uint32_t*)(IO_BASE + 0x1030 + (n << 2)))
-#define TIMER_FLAGS(n)			(*(volatile uint8_t*)(IO_BASE + 0x1040 + n)
+#define TIMER_FLAGS(n)			(*(volatile uint8_t*)(IO_BASE + 0x1040 + n))
 
 #define TIMER_FLAG_REPEAT		0x10;
 
