@@ -14,6 +14,8 @@ void printhex(uint8_t *buf, size_t n, uint32_t addr, int linew);
 uint32_t atoi(char* buf);
 char* itoa(uint32_t val, char* buf);
 char* ctoa(uint8_t val, char* buf);
+void IRQ_Handler_4(void);
+void IRQ_Handler_5(void);
 
 char itoa_buf[9];
 char rx_buf[256];
@@ -103,7 +105,7 @@ int main(){
 		do{
 			while(UART_ReceiveBufferEmpty(1));
 			recv = UART_ReceiveByte(1);
-		}while(recv < '1' || recv > '8');
+		}while(recv < '1' || recv > '9');
 		recv -= 0x30;
 
 		switch(recv){
@@ -236,14 +238,26 @@ int main(){
 				
 				break;	
 			case 7: // Abort boot.
-				printString("Unit is being turned off. Bye bye!\r\n");
-				GPIO_SetPower(0);
-				while(1);
+				//printString("Unit is being turned off. Bye bye!\r\n");
+				/*
+				*((uint32_t*)0x24000804) = 0x24026EB4;
+				*((uint32_t*)0x24000110) = (((((uint32_t)IRQ_Handler) - 0x24000110) >> 2) - 2) | 0xEA000000;
+				printString("I wrotez: 0x");
+				printString(itoa(*((uint32_t*)0x24000110), itoa_buf));
+				printString("\r\n");
+				*/
+				//*((uint32_t*)0x2403008C) = (uint32_t)IRQ_Handler_4;
+				*((uint32_t*)0x24000804) = 0x24026EB4;
+				*((uint32_t*)0x2403007C) = (uint32_t)IRQ_Handler_5;
 				break;
 			case 8: // LCD crap testing
 				LCD_Init(3);
 				LCD_WriteFramebuffer(fb);
 				LCD_SetBacklight(1);
+				break;
+			case 9: // Timer shit testing
+				enable_interrupts();
+				TIMER_PERIOD(2) -= 0x10;
 				break;
 		}
 	}
@@ -348,4 +362,22 @@ char* ctoa(uint8_t val, char* buf){
 	buf[1] = lut[val & 0xF];
 	buf[0] = lut[(val >> 4) & 0xF];
 	return buf;
+}
+
+void clear_interrupt(int nr){
+	if(nr > 31){
+		IRQ_FLAG_HI |= 1 << (nr - 32);
+		return;
+	}
+	IRQ_FLAG_LO |= 1 << nr;
+}
+
+void IRQ_Handler_4(void){
+	clear_interrupt(4);
+	UART_FIFO(1) = '4';
+}
+
+void IRQ_Handler_5(void){
+	clear_interrupt(5);
+	UART_FIFO(1) = '5';
 }

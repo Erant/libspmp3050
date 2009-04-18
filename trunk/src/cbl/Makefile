@@ -8,7 +8,7 @@ cbl.elf:	$(OBJECTS)
 	$(GCCPREFIX)-ld -T ldscript $(OBJECTS) -o cbl.elf
 
 %.o:	%.c
-	$(GCCPREFIX)-gcc -Wall -c -mcpu=arm926ej-s -O2 -std=c99 $<
+	$(GCCPREFIX)-gcc -Wall -Winline -c -mcpu=arm926ej-s -O2 -std=c99 $<
 
 clean:	
 	rm -f $(OBJECTS) cbl.bin cbl.elf
