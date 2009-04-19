@@ -63,4 +63,10 @@
 #define IRQ_ENABLE_LO			(*(volatile uint32_t*)(IO_BASE + 0x10D0))
 #define IRQ_ENABLE_HI			(*(volatile uint32_t*)(IO_BASE + 0x10D4))
 
-
+//--- Graphics ---//
+#define GFX_BASE				(IO_BASE + 0x7000)
+#define GFX_BLIT				(*(volatile uint8_t*)(GFX_BASE + 0x2F))
+#define GFX_FB_START			(*(volatile uint32_t*)(GFX_BASE + 0x130))
+#define GFX_FB_END				(*(volatile uint32_t*)(GFX_BASE + 0x134))
+#define GFX_FB_HORIZ			(*(volatile uint16_t*)(GFX_BASE + 0x138))
+#define GFX_FB_VERT				(*(volatile uint16_t*)(GFX_BASE + 0x13A))

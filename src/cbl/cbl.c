@@ -108,7 +108,7 @@ int main(){
 		do{
 			while(UART_ReceiveBufferEmpty(1));
 			recv = UART_ReceiveByte(1);
-		}while(recv < '1' || recv > '8');
+		}while(recv < '1' || recv > '9');
 		recv -= 0x30;
 
 		switch(recv){
@@ -250,6 +250,22 @@ int main(){
 				LCD_Init(3);
 				LCD_WriteFramebuffer(fb);
 				LCD_SetBacklight(1);
+				break;
+			case 9: // Graphics crap testing.
+				LCD_Init(3);
+				LCD_SetBacklight(1);
+				for(int i = 0; i < 240; i++)
+					for(int j = 0; j < 320; j++)
+						fb[(i * 320) + j] = i ^ j;
+				uint32_t fb_start = (((uint32_t)fb) & 0xFFFFFF) >> 1;
+				GFX_FB_START = fb_start;
+				GFX_FB_END = fb_start + (320 * 240);
+				GFX_FB_HORIZ = 240;
+				GFX_FB_VERT = 320;
+				
+				GFX_BLIT = 1;
+				
+				//LCD_WriteFramebuffer(fb);
 				break;
 		}
 	}
