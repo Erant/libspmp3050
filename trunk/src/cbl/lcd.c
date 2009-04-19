@@ -1,6 +1,8 @@
 #include "../spmp3050/spmp3050.h"
 #include "util.h"
 
+int lcd_mode = 0;
+
 void LCD_SetBacklight(int val){
 	DEV_ENABLE |= 0x8;
 	if(val)
@@ -126,7 +128,7 @@ void LCD_Reset(){
 	delay_us(50);
 }
 
-void LCD_Init(int lcd_type){	
+void LCD_Init(int lcd_type){
 	volatile uint8_t* lcd_base = LCD_BASE;
 	LCD_DATA_EXT &= 0x3;
 	
