@@ -1,2 +1,13 @@
 This is the source for the Prex operating system. 
 http://prex.sourceforge.net/
+
+# Building
+
+our target is called arm-spmp, configure with something like
+
+  ./configure --target=arm-spmp --cross-compile=/usr/local/arm/bin/arm-elf-
+
+Then type make en watch the errors fly across the screen. First order of business is getting a bootloader working and outputting
+debug information over the uart. We need stubs for all the other architecture dependent stuff. 
+
+
