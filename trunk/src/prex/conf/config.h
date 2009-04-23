@@ -1,0 +1,59 @@
+/*
+ * Automatically generated file. Don't edit
+ */
+#define AUTODETECT 0
+#define LOADER_BASE 0x03000000
+#define KERNEL_BASE 0x02000000
+#define DRIVER_BASE AUTODETECT
+#define SYSPAGE_BASE 0x03002000
+#define BOOTIMG_BASE 0x08002000
+#define CONFIG_HZ 100
+#define CONFIG_TIME_SLICE 100
+#define CONFIG_OPEN_MAX 8
+#define CONFIG_BUF_CACHE 8
+#define CONFIG_FS_THREADS 1
+#define CONFIG_ROMBOOT y
+#define CONFIG_BOOTDISK y
+#define CONFIG_KEYBOARD y
+#define CONFIG_CONSOLE y
+#define CONFIG_KEYPAD y
+#define CONFIG_RAMDISK y
+#define CONFIG_TTY y
+#define CONFIG_PM y
+#define CONFIG_PM_PERFORMANCE y
+#define CONFIG_DIAG_SCREEN y
+#define CONFIG_DEVFS y
+#define CONFIG_RAMFS y
+#define CONFIG_ARFS y
+#define CONFIG_ELF y
+
+#define CONFIG_CMDBOX y
+#define CONFIG_CMD_CAT y
+#define CONFIG_CMD_CLEAR y
+#define CONFIG_CMD_CP y
+#define CONFIG_CMD_DATE y
+#define CONFIG_CMD_DMESG y
+#define CONFIG_CMD_ECHO y
+#define CONFIG_CMD_FREE y
+#define CONFIG_CMD_HEAD y
+#define CONFIG_CMD_HOSTNAME y
+#define CONFIG_CMD_KILL y
+#define CONFIG_CMD_LS y
+#define CONFIG_CMD_MKDIR y
+#define CONFIG_CMD_MOUNT y
+#define CONFIG_CMD_MV y
+#define CONFIG_CMD_NICE y
+#define CONFIG_CMD_PS y
+#define CONFIG_CMD_PWD y
+#define CONFIG_CMD_REBOOT y
+#define CONFIG_CMD_RM y
+#define CONFIG_CMD_RMDIR y
+#define CONFIG_CMD_SH y
+#define CONFIG_CMD_SHUTDOWN y
+#define CONFIG_CMD_SLEEP y
+#define CONFIG_CMD_SYNC y
+#define CONFIG_CMD_TEST y
+#define CONFIG_CMD_TOUCH y
+#define CONFIG_CMD_UMOUNT y
+#define CONFIG_CMD_UNAME y
+
