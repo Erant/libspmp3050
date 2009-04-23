@@ -14,7 +14,7 @@ memory		BOOTIMG_BASE	0x80012000
 #
 # Make options
 #
-makeoptions	CFLAGS+=-mcpu=arm926ej-s
+makeoptions	CFLAGS+=-mcpu=arm9
 
 #
 # Tunable paramters
