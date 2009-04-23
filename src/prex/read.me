@@ -9,14 +9,10 @@ First you'll need to build and install binutils 2.19.1:
 2) create a temporary directory where you'll be building your binutils (i.e. src/binutils-2.19.1-arm-elf)
 3) configure with the following params, i.e.:
 
-	../binutils-2.19.1/configure --prefix=/usr/local/arm --target=arm-elf --disable-nls --with-cpu=arm926ej-s
+	../binutils-2.19.1/configure --prefix=/usr/local/arm --target=arm-elf --disable-nls --with-cpu=arm926ej-s --disable-werror
 	
-4) things never build out of the box so you'll need to patch gas/Makefile and remove -Werror from line 205. The modified line should read:
-
-	WARN_CFLAGS = -W -Wall -Wstrict-prototypes -Wmissing-prototypes
-	
-5) type `make` to build the thing
-6) type `sudo make install' to install it.
+4) type `make` to build the thing
+5) type `sudo make install' to install it.
 
 Then you'll have to build GCC, we'll use 4.3.3:
 
