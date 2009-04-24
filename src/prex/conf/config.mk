@@ -13,7 +13,7 @@ CONFIG_OPEN_MAX=16
 CONFIG_BUF_CACHE=32
 CONFIG_FS_THREADS=4
 CONFIG_DIAG_SERIAL=y
-CONFIG_DEVFS=y
+CONFIG_RAMFS=y
 
 CONFIG_CMDBOX=y
 CONFIG_CMD_CAT=y
@@ -59,6 +59,6 @@ SRCDIR=/home/niels/src/libspmp3050/src/prex
 ARCH=arm
 PLATFORM=spmp
 PROFILE=spmp
-CROSS_COMPILE=/usr/local/arm/bin/arm-elf-
+CROSS_COMPILE=/home/niels/src/libspmp3050/src/toolchain/install/bin/arm-elf-
 
 CONFIG_CFLAGS+= -fno-stack-protector
