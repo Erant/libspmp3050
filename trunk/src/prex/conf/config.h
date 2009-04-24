@@ -13,7 +13,7 @@
 #define CONFIG_BUF_CACHE 32
 #define CONFIG_FS_THREADS 4
 #define CONFIG_DIAG_SERIAL y
-#define CONFIG_DEVFS y
+#define CONFIG_RAMFS y
 
 #define CONFIG_CMDBOX y
 #define CONFIG_CMD_CAT y
