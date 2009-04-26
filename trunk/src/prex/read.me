@@ -1,6 +1,18 @@
 This is the source for the Prex operating system. 
 http://prex.sourceforge.net/
 
+## the automagic way:
+
+first build binutils and gcc, installing them into a local directory:
+
+ run './builder.sh' in the '../toolchain/' directory, this should download and fetch binutils and gcc and install it into a local directory
+
+then configure prex by doing:
+
+ ./configure --target=arm-spmp --cross-compile=`pwd`/../toolchain/install/bin/arm-elf-
+
+## the manual way:
+
 # Building a GCC tool chain
 
 First you'll need to build and install binutils 2.19.1:
