@@ -36,7 +36,7 @@
 
 #define ENTRY(x) .global x; .align; x##:
 
-	.section ".text","ax"
+	.section ".bootldr","ax"
 	.code 32
 /*
  * Loader entry point
@@ -53,13 +53,7 @@ start_vector:
 	msr	cpsr_c, r0
 	ldr	sp, stack_end
 
-	adr	r0, thumb_mode + 1
-	bx	r0
-	.code 16
-thumb_mode:
-
-	ldr	r0, =loader_main
-	bx	r0		/* Change to ARM mode */
+	b	loader_main
 
 	.code 32
 

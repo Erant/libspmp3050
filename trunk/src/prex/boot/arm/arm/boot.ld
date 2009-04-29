@@ -4,6 +4,11 @@
 INCLUDE config.ld
 
 SECTIONS {
+	. = 0x0 ;
+	.bootldr . : {
+		*(.bootldr)
+	}
+
 	. = LOADER_BASE ;
 
 	.text . : {

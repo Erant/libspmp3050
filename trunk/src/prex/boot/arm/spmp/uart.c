@@ -1,7 +1,7 @@
 #define	IO_BASE				0x10000000
 
 #define UART_BASE			(IO_BASE + 0x1800)
-#define	UART(n)				( *(volatile unsigned char*) (UART_BASE + (n << 5)) )
+#define	UART(n)				(UART_BASE + (n << 5))
 #define UART_FIFO(n)			( *(volatile unsigned char*) (UART(n) + 0x02) )
 #define UART_STATUS(n)			( *(volatile unsigned char*) (UART(n) + 0x0A) )
 #define UART_ENABLE(n)			( *(volatile unsigned char*) ((UART_BASE + 0x80)) |= (1 << n))
