@@ -243,6 +243,12 @@ ENTRY(interrupt_entry)
 	ldmfd	sp!, {r0-r3,r12,lr}	/* Discard GBA BIOS's stack */
 #endif
 	stmfd	sp, {r0-r4}		/* Save work registers */
+/*  send a char over serial
+	mov r0, #0x10000000
+	add r0, r0, #0x1800
+	mov r1, #'I'
+	strb r1, [r0, #0x22]
+*/
 	sub	r2, lr, #4		/* r2: pc */
 	mrs	r3, spsr		/* r3: cpsr */
 	sub	r4, sp, #(4*5)		/* Pointer to saved registers */

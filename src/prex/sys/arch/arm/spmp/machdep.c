@@ -37,6 +37,7 @@
 #include <syspage.h>
 #include <locore.h>
 #include <cpufunc.h>
+#include <platform.h>
 
 /*
  * Reset system.
@@ -68,4 +69,41 @@ machine_setpower(int state)
 void
 machine_init(void)
 {
+	printf("machine init\n");
+	
+	#define REG(x) (*(volatile uint8_t*)(IO_BASE + x))
+	
+	/* --- init_1 procedure from firmware --- */
+	REG(8) = 0x79;
+	REG(0x111) = 0xB2;
+	{
+		uint8_t val;
+		
+		val = REG(0xB1) & 1;
+		
+		switch ((REG(0xB2) & 6) >> 1) {
+			case 0:
+				REG(0x136) = 11;
+				if (val == 1) REG(0x132) = 0;
+				break;
+		
+			case 1:
+				REG(0x136) = 13;
+				if (val == 1) {
+					REG(0x123) = 6;
+					REG(0x132) = 0;
+				}
+				break;
+		
+			case 2:
+				REG(0x136) = 15;
+				if (val == 1) {
+					REG(0x123) = 7;
+					REG(0x132) = 0;
+				}
+				break;
+		}
+	}
+	
+	SYS_REG = 1;
 }

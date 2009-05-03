@@ -4,8 +4,6 @@ TARGET=		dev.o
 TYPE=		OBJECT
 OBJS-y= 	../arm/start.o
 
-OBJS-$(CONFIG_CONSOLE)+=	console.o
-OBJS-$(CONFIG_KEYPAD)+=		keypad.o
-OBJS-$(CONFIG_KEYBOARD)+=	swkbd.o
+OBJS-$(CONFIG_SERIAL)+=	        serial.o
 
 include $(SRCDIR)/mk/dev.mk

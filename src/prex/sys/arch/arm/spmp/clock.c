@@ -36,7 +36,7 @@
 #include <irq.h>
 
 /* Interrupt vector for timer (TMR1) */
-#define CLOCK_IRQ	6
+#define CLOCK_IRQ	5
 
 /* The clock rate per second - 1Mhz */
 #define CLOCK_RATE	1000000L
@@ -45,20 +45,23 @@
 #define TIMER_COUNT	(CLOCK_RATE / HZ)
 
 /* Timer 1 registers */
-#define TMR_LOAD	(*(volatile uint32_t *)(TIMER_BASE + 0x100))
-#define TMR_VAL		(*(volatile uint32_t *)(TIMER_BASE + 0x104))
-#define TMR_CTRL	(*(volatile uint32_t *)(TIMER_BASE + 0x108))
-#define TMR_CLR		(*(volatile uint32_t *)(TIMER_BASE + 0x10c))
+#define	IO_BASE				0x10000000
+#define IRQ_FLAG_LO			(*(volatile uint32_t*)(IO_BASE + 0x10C0))
+#define IRQ_FLAG_HI			(*(volatile uint32_t*)(IO_BASE + 0x10C4))
+#define IRQ_ENABLE_LO			(*(volatile uint32_t*)(IO_BASE + 0x10D0))
+#define TIMER_PERIOD(n)			(*(volatile uint16_t*)(IO_BASE + 0x1318 + (n << 1)))
+#define TIMER_ENABLE			(*(volatile uint8_t*)(IO_BASE + 0x1044))
+#define TIMER_COUNTER(n)		(*(volatile uint32_t*)(IO_BASE + 0x1030 + (n << 2)))
+#define TIMER_FLAGS(n)			(*(volatile uint8_t*)(IO_BASE + 0x1040 + n))
+#define TIMER_REPEAT			0x10
 
-/* Timer control register */
-#define TCTRL_DISABLE	0x00
-#define TCTRL_ENABLE	0x80
-#define TCTRL_PERIODIC	0x40
-#define TCTRL_INTEN	0x20
-#define TCTRL_SCALE256	0x08
-#define TCTRL_SCALE16	0x04
-#define TCTRL_32BIT	0x02
-#define TCTRL_ONESHOT	0x01
+void clear_interrupt(int nr) {
+	if(nr > 31){
+		IRQ_FLAG_HI |= 1 << (nr - 32);
+		return;
+	}
+	IRQ_FLAG_LO |= 1 << nr;
+}
 
 /*
  * Clock interrupt service routine.
@@ -69,8 +72,9 @@ clock_isr(int irq)
 {
 
 	irq_lock();
+	printf("tick\n");
 	timer_tick();
-	TMR_CLR = 0x01;	/* Clear timer interrupt */
+	clear_interrupt(4);	/* Clear timer interrupt */
 	irq_unlock();
 
 	return INT_DONE;
@@ -84,18 +88,25 @@ void
 clock_init(void)
 {
 	irq_t clock_irq;
-
-	/* Setup counter value */
-	TMR_CTRL = TCTRL_DISABLE;
-	TMR_LOAD = TIMER_COUNT;
-	TMR_CTRL |= (TCTRL_ENABLE | TCTRL_PERIODIC);
+	
+	/* setup timer values */
+	int timer = 0;
+	int period = 12000;
+	int div = 10;
+	uint8_t flags = TIMER_REPEAT;
+	TIMER_PERIOD(timer) = period - 1;
+	TIMER_COUNTER(timer) = (div * 100) - 1;
+	TIMER_FLAGS(timer) = flags;
 
 	/* Install ISR */
 	clock_irq = irq_attach(CLOCK_IRQ, IPL_CLOCK, 0, &clock_isr, NULL);
 	ASSERT(clock_irq != NULL);
 
-	/* Enable timer interrupt */
-	TMR_CTRL |= TCTRL_INTEN;
+	/* enable timer */
+	TIMER_ENABLE |= 1 << timer;
+	
+	/* enable timer interrupt */
+	IRQ_ENABLE_LO |= 1 << (timer + 4);
 
 	DPRINTF(("Clock rate: %d ticks/sec\n", CONFIG_HZ));
 }

@@ -34,6 +34,7 @@
 #include <boot.h>
 #include <sys/elf.h>
 
+/*#define ELFDBG(x) printf x*/
 #define SHF_VALID	(SHF_ALLOC | SHF_EXECINSTR | SHF_ALLOC | SHF_WRITE)
 
 static char *sect_addr[32];	/* array of section address */

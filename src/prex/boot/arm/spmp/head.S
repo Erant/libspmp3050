@@ -46,7 +46,9 @@ ENTRY(boot_entry)
 
 	.align
 	.code 32
-stack_end:	.word	(BOOT_STACKTOP - PAGE_OFFSET)
+stack_end:
+@	.word	(BOOT_STACKTOP - PAGE_OFFSET)
+	.word	0x007FFFF0
 
 start_vector:
 	mov	r0, #0xd3		/* Enter SVC mode, Disable IRQ,FIQ */
