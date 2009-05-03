@@ -42,6 +42,11 @@
 #define UART_FR		(*(volatile uint32_t *)(UART_BASE + 0x18))
 #define UART_DR		(*(volatile uint32_t *)(UART_BASE + 0x00))
 
+#define UART_STATUS	(*(volatile unsigned char*) (0x1000182A))
+#define UART_FIFO	(*(volatile unsigned char*) (0x10001822))
+#define UART_TX_BUSY	2
+
+
 /* Flag register */
 #define FR_RXFE		0x10	/* Receive FIFO empty */
 #define FR_TXFF		0x20	/* Transmit FIFO full */
@@ -61,11 +66,20 @@ diag_print(char *buf)
 {
 
 #ifdef CONFIG_DIAG_SERIAL
+/*
 	while (*buf) {
 		if (*buf == '\n')
 			serial_putc('\r');
 		serial_putc(*buf);
 		++buf;
+	}
+*/
+	char *pc = buf;
+	
+	while (*pc != 0) {
+		while(UART_STATUS & UART_TX_BUSY);
+		UART_FIFO = *pc;
+		pc++;
 	}
 #endif
 }

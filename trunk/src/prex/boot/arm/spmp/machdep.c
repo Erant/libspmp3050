@@ -46,8 +46,8 @@ bootinfo_setup(void)
 	/*
 	 * On-board SSRAM - 4M
 	 */
-	bootinfo->ram[0].base = 0x24;
-	bootinfo->ram[0].size = 0x800000 - 0x24;
+	bootinfo->ram[0].base = 0x24000000;
+	bootinfo->ram[0].size = 0x800000;/* - 0x24;*/
 	bootinfo->ram[0].type = MT_USABLE;
 
 	bootinfo->nr_rams = 1;

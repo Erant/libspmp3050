@@ -10,6 +10,7 @@ boottasks	$(SRCDIR)/usr/server/boot/boot
 boottasks	$(SRCDIR)/usr/server/proc/proc
 boottasks	$(SRCDIR)/usr/server/fs/fs
 boottasks	$(SRCDIR)/usr/server/exec/exec
+boottasks	$(SRCDIR)/usr/sample/hello/hello
 
 #boottasks	$(SRCDIR)/usr/sample/alarm/alarm
 #boottasks	$(SRCDIR)/usr/sample/bench/bench
@@ -21,7 +22,7 @@ boottasks	$(SRCDIR)/usr/server/exec/exec
 #boottasks	$(SRCDIR)/usr/sample/balls/balls
 
 #boottasks	$(SRCDIR)/usr/test/cap/cap
-#boottasks	$(SRCDIR)/usr/test/console/console
+boottasks	$(SRCDIR)/usr/test/console/console
 #boottasks	$(SRCDIR)/usr/test/deadlock/deadlock
 #boottasks	$(SRCDIR)/usr/test/errno/errno
 #boottasks	$(SRCDIR)/usr/test/exception/exception

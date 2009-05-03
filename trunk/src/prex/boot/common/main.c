@@ -34,6 +34,8 @@
 #include <boot.h>
 #include <ar.h>
 
+#define DEBUG_BOOTINFO
+
 /*
  * Boot information
  */

@@ -4,7 +4,7 @@
 INCLUDE config.ld
 
 SECTIONS {
-	. = 0x0 ;
+	. = 0x24000000 ;
 	.bootldr . : {
 		*(.bootldr)
 	}

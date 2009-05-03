@@ -35,12 +35,7 @@
 #include <irq.h>
 #include <locore.h>
 #include <cpu.h>
-
-/* Registers for interrupt control unit - enable/flag/master */
-#define ICU_IRQSTS	(*(volatile uint32_t *)(ICU_BASE + 0x00))
-#define ICU_IRQEN	(*(volatile uint32_t *)(ICU_BASE + 0x08))
-#define ICU_IRQENSET	(*(volatile uint32_t *)(ICU_BASE + 0x08))
-#define ICU_IRQENCLR	(*(volatile uint32_t *)(ICU_BASE + 0x0C))
+#include <platform.h>
 
 /*
  * Interrupt Priority Level
@@ -57,16 +52,18 @@ volatile int irq_level;
 static int ipl_table[NIRQS];		/* vector -> level */
 static uint32_t mask_table[NIPLS];	/* level -> mask */
 
+
 /*
  * Set mask for current ipl
  */
 static void
 update_mask(void)
 {
-	u_int mask = mask_table[irq_level];
+/*	u_int mask = mask_table[irq_level];
 
 	ICU_IRQENCLR = ~mask;
 	ICU_IRQENSET = mask;
+*/
 }
 
 /*
@@ -126,16 +123,27 @@ void
 interrupt_handler(void)
 {
 	uint32_t bits;
-	int vector, old_ipl, new_ipl;
+	int vector, old_ipl, new_ipl, vector_offs;
+	
+	vector = 0;
+	printf("irq vector = %d\n", vector);
 
 	/* Get interrupt source */
-	bits = ICU_IRQSTS;
+	bits = IRQ_FLAG_LO;
+	vector_offs = 0;
+	if (bits == 0) {
+		bits = IRQ_FLAG_HI;
+		vector_offs += 32;
+	}
+	
 	for (vector = 0; vector < NIRQS; vector++) {
 		if (bits & (uint32_t)(1 << vector))
 			break;
 	}
 	if (vector == NIRQS)
 		goto out;
+
+	vector += vector_offs;		
 
 	/* Adjust interrupt level */
 	old_ipl = irq_level;
@@ -158,20 +166,17 @@ out:
 
 /*
  * Initialize interrupt controllers.
- * All interrupts will be masked off.
+ * All interrupts will (/should) be masked off.
  */
 void
 interrupt_init(void)
 {
-	int i;
-
-	irq_level = IPL_NONE;
-
-	for (i = 0; i < NIRQS; i++)
-		ipl_table[i] = IPL_NONE;
-
-	for (i = 0; i < NIPLS; i++)
-		mask_table[i] = 0;
-
-	ICU_IRQENCLR = 0xffff;		/* Mask all interrupts */
+	printf("enabeling interrupts\n");
+	IRQ_MASK_LO = 0xFFFFFFFF;
+	IRQ_MASK_HI = 0xFFFFFFFF;
+	UNK01 = 1;
+/*
+	IRQ_MASK_LO = 0;
+	IRQ_MASK_HI = 0;
+*/	interrupt_enable();
 }
