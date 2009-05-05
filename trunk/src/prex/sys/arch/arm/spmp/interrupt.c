@@ -175,8 +175,16 @@ interrupt_init(void)
 	IRQ_MASK_LO = 0xFFFFFFFF;
 	IRQ_MASK_HI = 0xFFFFFFFF;
 	UNK01 = 1;
+
+    /* 	IRQ_VECTOR = (uint32_t)interrupt_entry; /\* Interrupt hook address *\/ */
+    /* copy interrupt table to 0x24000000 */
+
+    memcpy( 0x24000000, &interrupt_entry, 4*8 );
+
 /*
 	IRQ_MASK_LO = 0;
 	IRQ_MASK_HI = 0;
 */	interrupt_enable();
+
+
 }
