@@ -34,10 +34,11 @@
 #include <boot.h>
 #include <sys/elf.h>
 
-/*#define ELFDBG(x) printf x*/
+#define ELFDBG(x) printf x
 #define SHF_VALID	(SHF_ALLOC | SHF_EXECINSTR | SHF_ALLOC | SHF_WRITE)
 
 static char *sect_addr[32];	/* array of section address */
+static char *string_addr; /* pointer to the string table */
 
 static int
 load_executable(char *img, struct module *m)
@@ -120,9 +121,13 @@ relocate_section_rela(Elf32_Sym *sym_table, Elf32_Rela *rela,
 			if (relocate_rela(rela, sym_val, target_sect) != 0)
 				return -1;
 		} else if (ELF32_ST_BIND(sym->st_info) != STB_WEAK) {
-			ELFDBG(("Undefined symbol for rela[%x] sym=%x\n",
-				 i, sym));
-			return -1;
+          char * name = "(no string table)";
+          if (string_addr)
+            name = string_addr + sym->st_name;
+          ELFDBG(("Undefined symbol for rela[%x] sym=%x name index=%x name='%s'\n",
+                  i, sym, sym->st_name, name));
+
+          return -1;
 		} else {
 			ELFDBG(("Undefined weak symbol for rela[%x]\n", i));
 		}
@@ -147,8 +152,11 @@ relocate_section_rel(Elf32_Sym *sym_table, Elf32_Rel *rel,
 			if (relocate_rel(rel, sym_val, target_sect) != 0)
 				return -1;
 		} else if (ELF32_ST_BIND(sym->st_info) != STB_WEAK) {
-			ELFDBG(("Undefined symbol for rel[%x] sym=%x\n",
-				 i, sym));
+          char * name = "(no string table)";
+          if (string_addr)
+            name = string_addr + sym->st_name;
+			ELFDBG(("Undefined symbol for rel[%x] sym=%x name index=%x name='%s'\n",
+                    i, sym, sym->st_name, name ));
 			return -1;
 		} else {
 			ELFDBG(("Undefined weak symbol for rel[%x]\n", i));
@@ -255,8 +263,12 @@ load_relocatable(char *img, struct module *m)
 		} else if (shdr->sh_type == SHT_SYMTAB) {
 			/* Symbol table */
 			sect_addr[i] = img + shdr->sh_offset;
-		}
-	}
+		}  else if (shdr->sh_type == SHT_STRTAB) {
+			/* String table */
+          ELFDBG(("found string table in section number 0x%x\n", i));
+          sect_addr[i] = img + shdr->sh_offset;
+          string_addr = sect_addr[i];
+		}	}
 	m->textsz = (size_t)(m->data - m->text);
 	m->datasz = (size_t)((size_t)phys_to_virt(bss_base) - m->data);
 
