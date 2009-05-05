@@ -42,22 +42,7 @@ typedef unsigned long uint32_t;
 /* number of interrupt vectors */
 #define NIRQS		64
 
-#ifdef CONFIG_MMU
-#define CM_IOMEM_BASE	0xc0000000
-#else
-#define CM_IOMEM_BASE	0
-#endif
-
-#define	IO_BASE					((volatile void*)0x10000000)
-
-/*--- SYSTEM ---*/
-#define SYS_REG					(*(volatile uint8_t*)(IO_BASE +0x1000))
-#define UNK01					(*(volatile uint8_t*)(IO_BASE +0xb329))
-
-#define UNK02					(*(volatile uint8_t*)(IO_BASE +0xb1))
-#define UNK03					(*(volatile uint8_t*)(IO_BASE +0xb2))
-#define UNK04					(*(volatile uint8_t*)(IO_BASE +0x132))
-#define UNK05					(*(volatile uint8_t*)(IO_BASE +0x123))
+#define	IO_BASE					(0x10000000)
 
 /*--- UART ---*/
 #define UART_BASE				(IO_BASE + 0x1800)
