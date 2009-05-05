@@ -157,7 +157,6 @@ interrupt_handler(void)
 	irq_handler(vector);
 	interrupt_disable();
 
-	IRQ_FLAG_LO = 0x20;
 	IRQ_MASK_LO |= bits;
 
 	/* Restore interrupt level */
