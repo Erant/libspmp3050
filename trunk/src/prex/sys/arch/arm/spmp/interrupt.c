@@ -125,25 +125,25 @@ interrupt_handler(void)
 	uint32_t bits;
 	int vector, old_ipl, new_ipl, vector_offs;
 	
-	vector = 0;
-	printf("irq vector = %d\n", vector);
-
 	/* Get interrupt source */
 	bits = IRQ_FLAG_LO;
+	IRQ_MASK_LO &= ~bits;
 	vector_offs = 0;
-	if (bits == 0) {
+	if (!bits) {
 		bits = IRQ_FLAG_HI;
-		vector_offs += 32;
+		vector_offs = 32;
+		if(!bits)
+			goto out;
 	}
 	
 	for (vector = 0; vector < NIRQS; vector++) {
 		if (bits & (uint32_t)(1 << vector))
 			break;
-	}
-	if (vector == NIRQS)
-		goto out;
+	}	
 
 	vector += vector_offs;		
+
+	/* printf("irq %d fired.\n", vector); */
 
 	/* Adjust interrupt level */
 	old_ipl = irq_level;
@@ -156,6 +156,9 @@ interrupt_handler(void)
 	interrupt_enable();
 	irq_handler(vector);
 	interrupt_disable();
+
+	IRQ_FLAG_LO = 0x20;
+	IRQ_MASK_LO |= bits;
 
 	/* Restore interrupt level */
 	irq_level = old_ipl;
@@ -172,19 +175,9 @@ void
 interrupt_init(void)
 {
 	printf("enabeling interrupts\n");
-	IRQ_MASK_LO = 0xFFFFFFFF;
-	IRQ_MASK_HI = 0xFFFFFFFF;
-	UNK01 = 1;
-
-    /* 	IRQ_VECTOR = (uint32_t)interrupt_entry; /\* Interrupt hook address *\/ */
-    /* copy interrupt table to 0x24000000 */
-
-    memcpy( 0x24000000, &interrupt_entry, 4*8 );
-
-/*
 	IRQ_MASK_LO = 0;
 	IRQ_MASK_HI = 0;
-*/	interrupt_enable();
+	UNK01 = 1;
 
-
+	interrupt_enable();
 }
