@@ -71,9 +71,11 @@ machine_init(void)
 {
 	printf("machine init\n");
 	
+	page_reserve(SYSPAGE_BASE, SYSPAGE_SIZE);
+	vector_copy(SYSPAGE_BASE);
+/*	
 	#define REG(x) (*(volatile uint8_t*)(IO_BASE + x))
 	
-	/* --- init_1 procedure from firmware --- */
 	REG(8) = 0x79;
 	REG(0x111) = 0xB2;
 	{
@@ -106,4 +108,5 @@ machine_init(void)
 	}
 	
 	SYS_REG = 1;
+*/
 }
