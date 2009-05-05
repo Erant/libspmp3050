@@ -67,7 +67,7 @@ options 	DIAG_SERIAL	# Diagnostic via serial port
 # File systems
 #
 #options 	FIFOFS		# FIFO & Pipe
-#options 	DEVFS		# Device file system
+options 	DEVFS		# Device file system
 options 	RAMFS		# RAM file system
 options 	ARFS		# Archive file system
 #options 	FATFS		# FAT file system
@@ -75,4 +75,4 @@ options 	ARFS		# Archive file system
 #
 # Executable file formats
 #
-#options 	ELF		# ELF file format
+options 	ELF		# ELF file format
