@@ -110,7 +110,7 @@ int main(int argc, char** argv)
 	code = (uint8_t*)malloc(codesize);
 	if (code == NULL) {
 		printf("error: out of memory\n");
-		ret -7;
+		ret = -7;
 		goto finish;
 	}
 	
