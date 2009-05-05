@@ -34,10 +34,10 @@ typedef unsigned char uint8_t;
 typedef unsigned long uint32_t;
 */
 /* vector relocation target */
-#define ARM_VECTORS	ARM_VECTORS_LOW
+#define ARM_VECTORS	SYSPAGE_BASE
 
 /* base address of user stack */
-#define USTACK_BASE	(0 + PAGE_SIZE)
+#define USTACK_BASE	(0x24200000 + PAGE_SIZE)
 
 /* number of interrupt vectors */
 #define NIRQS		32
