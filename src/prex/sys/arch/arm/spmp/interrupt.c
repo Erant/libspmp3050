@@ -50,7 +50,7 @@ volatile int irq_level;
  * Interrupt mapping table
  */
 static int ipl_table[NIRQS];		/* vector -> level */
-static uint32_t mask_table[NIPLS];	/* level -> mask */
+static uint64_t mask_table[NIPLS];	/* level -> mask */
 
 
 /*
@@ -59,11 +59,8 @@ static uint32_t mask_table[NIPLS];	/* level -> mask */
 static void
 update_mask(void)
 {
-/*	u_int mask = mask_table[irq_level];
-
-	ICU_IRQENCLR = ~mask;
-	ICU_IRQENSET = mask;
-*/
+	uint64_t mask = mask_table[irq_level];
+	IRQ_MASK = mask;
 }
 
 /*
@@ -75,7 +72,7 @@ void
 interrupt_unmask(int vector, int level)
 {
 	int i;
-	uint32_t unmask = (uint32_t)1 << vector;
+	uint64_t unmask = (uint64_t)1 << vector;
 
 	/* Save level mapping */
 	ipl_table[vector] = level;
@@ -97,7 +94,7 @@ void
 interrupt_mask(int vector)
 {
 	int i, level;
-	u_int mask = (uint16_t)~(1 << vector);
+	uint64_t mask = (uint64_t)~(1 << vector);
 
 	level = ipl_table[vector];
 	for (i = 0; i < level; i++)
@@ -127,7 +124,6 @@ interrupt_handler(void)
 	
 	/* Get interrupt source */
 	bits = IRQ_FLAG;
-	IRQ_MASK &= ~bits;
 	
 	for (vector = 0; vector < NIRQS; vector++) {
 		if (bits & (uint64_t)(1 << vector))
@@ -136,8 +132,6 @@ interrupt_handler(void)
 
 	if(vector == NIRQS)
 		return;
-
-	/* printf("irq %d fired.\n", vector); */
 
 	/* Adjust interrupt level */
 	old_ipl = irq_level;
@@ -154,7 +148,6 @@ interrupt_handler(void)
 	/* Restore interrupt level */
 	irq_level = old_ipl;
 	update_mask();
-	IRQ_MASK |= bits;
 	return;
 }
 
@@ -166,9 +159,8 @@ void
 interrupt_init(void)
 {
 	printf("enabeling interrupts\n");
-	IRQ_MASK_LO = 0;
-	IRQ_MASK_HI = 0;
-	UNK01 = 1;
+	IRQ_MASK = 0;
+	IRQ_ENABLE = 0;
 
 	interrupt_enable();
 }
