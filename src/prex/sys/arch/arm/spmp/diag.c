@@ -81,6 +81,13 @@ diag_print(char *buf)
 		UART_FIFO = *pc;
 		pc++;
 	}
+    if (pc != buf && pc[-1]=='\n')
+      {
+		while(UART_STATUS & UART_TX_BUSY)
+          ;
+		UART_FIFO = '\r';
+      }
+      
 #endif
 }
 
