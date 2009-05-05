@@ -80,6 +80,36 @@ clock_isr(int irq)
 	return INT_DONE;
 }
 
+static void debug_interrupts_tightloop()
+{
+  /* monitor IRQ_FLAG for 10000000 iterations and print any changes to serial (should take about 5-10 seconds i guess) */
+  static unsigned int lastflags_lo=0, lastflags_hi=0;
+  unsigned int a;
+      
+  DPRINTF(("sitting in a pretty tight loop to see if things break..\n"));
+      
+  for(a=0;a<1000000;a++)
+    {
+      unsigned int lo = IRQ_FLAG_LO;
+      unsigned int hi = IRQ_FLAG_HI;
+      if (lo != lastflags_lo)
+        {
+          DPRINTF(("a=%d, and irq_flag_lo went to %08x\n", a, lo ));
+          lastflags_lo = lo;
+        }
+      if (hi != lastflags_hi)
+        {
+          DPRINTF(("a=%d, and irq_flag_hi went to %08x\n", a, hi));
+          lastflags_hi = hi;
+        }
+
+      if ( (a&0xfffff)==0)
+        DPRINTF(("*"));
+    }
+  DPRINTF(("looks like things are still ok.\n"));
+}
+
+
 /*
  * Initialize clock H/W chip.
  * Setup clock tick rate and install clock ISR.
@@ -109,4 +139,7 @@ clock_init(void)
 	IRQ_ENABLE_LO |= 1 << (timer + 4);
 
 	DPRINTF(("Clock rate: %d ticks/sec\n", CONFIG_HZ));
+
+    debug_interrupts_tightloop();
+
 }
