@@ -120,6 +120,7 @@ typedef unsigned long uint32_t;
 #define IRQ_MASK_LO				(*(volatile uint32_t*)(IO_BASE + 0x1310))
 #define IRQ_MASK_HI				(*(volatile uint32_t*)(IO_BASE + 0x1314))
 
+#define IRQ_ENABLE			(*(volatile uint64_t*)(IO_BASE + 0x10D0))
 #define IRQ_ENABLE_LO			(*(volatile uint32_t*)(IO_BASE + 0x10D0))
 #define IRQ_ENABLE_HI			(*(volatile uint32_t*)(IO_BASE + 0x10D4))
 
