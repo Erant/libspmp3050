@@ -34,6 +34,7 @@
 #include <kernel.h>
 #include <timer.h>
 #include <irq.h>
+#include <platform.h>
 
 /* Interrupt vector for timer (TMR1) */
 #define CLOCK_IRQ	5
@@ -43,17 +44,6 @@
 
 /* The initial counter value */
 #define TIMER_COUNT	(CLOCK_RATE / HZ)
-
-/* Timer 1 registers */
-#define	IO_BASE				0x10000000
-#define IRQ_FLAG_LO			(*(volatile uint32_t*)(IO_BASE + 0x10C0))
-#define IRQ_FLAG_HI			(*(volatile uint32_t*)(IO_BASE + 0x10C4))
-#define IRQ_ENABLE_LO			(*(volatile uint32_t*)(IO_BASE + 0x10D0))
-#define TIMER_PERIOD(n)			(*(volatile uint16_t*)(IO_BASE + 0x1318 + (n << 1)))
-#define TIMER_ENABLE			(*(volatile uint8_t*)(IO_BASE + 0x1044))
-#define TIMER_COUNTER(n)		(*(volatile uint32_t*)(IO_BASE + 0x1030 + (n << 2)))
-#define TIMER_FLAGS(n)			(*(volatile uint8_t*)(IO_BASE + 0x1040 + n))
-#define TIMER_REPEAT			0x10
 
 void clear_interrupt(int nr) {
 	if(nr > 31){
@@ -67,14 +57,13 @@ void clear_interrupt(int nr) {
  * Clock interrupt service routine.
  * No H/W reprogram is required.
  */
-static int
-clock_isr(int irq)
+static int clock_isr(int irq)
 {
 
 	irq_lock();
-	printf("tick\n");
+	/* printf("tick\n"); */
 	timer_tick();
-	clear_interrupt(4);	/* Clear timer interrupt */
+	clear_interrupt(CLOCK_IRQ);	/* Clear timer interrupt */
 	irq_unlock();
 
 	return INT_DONE;
@@ -120,8 +109,8 @@ clock_init(void)
 	irq_t clock_irq;
 	
 	/* setup timer values */
-	int timer = 0;
-	int period = 12000;
+	int timer = CLOCK_IRQ - 4;
+	int period = 120;
 	int div = 10;
 	uint8_t flags = TIMER_REPEAT;
 	TIMER_PERIOD(timer) = period - 1;
@@ -137,9 +126,10 @@ clock_init(void)
 	
 	/* enable timer interrupt */
 	IRQ_ENABLE_LO |= 1 << (timer + 4);
+	IRQ_MASK_LO |= 1 << (timer + 4);
 
 	DPRINTF(("Clock rate: %d ticks/sec\n", CONFIG_HZ));
 
-    debug_interrupts_tightloop();
+	/* debug_interrupts_tightloop(); */
 
 }
