@@ -40,7 +40,7 @@ typedef unsigned long uint32_t;
 #define USTACK_BASE	(0x24200000 + PAGE_SIZE)
 
 /* number of interrupt vectors */
-#define NIRQS		32
+#define NIRQS		64
 
 #ifdef CONFIG_MMU
 #define CM_IOMEM_BASE	0xc0000000
@@ -111,9 +111,12 @@ typedef unsigned long uint32_t;
 #define TIMER_REPEAT			0x10
 
 /*--- IRQ ---*/
+
+#define IRQ_FLAG				(*(volatile uint64_t*)(IO_BASE + 0x10C0))
 #define IRQ_FLAG_LO				(*(volatile uint32_t*)(IO_BASE + 0x10C0))
 #define IRQ_FLAG_HI				(*(volatile uint32_t*)(IO_BASE + 0x10C4))
 
+#define IRQ_MASK				(*(volatile uint64_t*)(IO_BASE + 0x1310))
 #define IRQ_MASK_LO				(*(volatile uint32_t*)(IO_BASE + 0x1310))
 #define IRQ_MASK_HI				(*(volatile uint32_t*)(IO_BASE + 0x1314))
 
