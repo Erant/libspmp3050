@@ -122,26 +122,20 @@ interrupt_setup(int vector, int mode)
 void
 interrupt_handler(void)
 {
-	uint32_t bits;
+	uint64_t bits;
 	int vector, old_ipl, new_ipl, vector_offs;
 	
 	/* Get interrupt source */
-	bits = IRQ_FLAG_LO;
-	IRQ_MASK_LO &= ~bits;
-	vector_offs = 0;
-	if (!bits) {
-		bits = IRQ_FLAG_HI;
-		vector_offs = 32;
-		if(!bits)
-			goto out;
-	}
+	bits = IRQ_FLAG;
+	IRQ_MASK &= ~bits;
 	
 	for (vector = 0; vector < NIRQS; vector++) {
-		if (bits & (uint32_t)(1 << vector))
+		if (bits & (uint64_t)(1 << vector))
 			break;
 	}	
 
-	vector += vector_offs;		
+	if(vector == NIRQS)
+		return;
 
 	/* printf("irq %d fired.\n", vector); */
 
@@ -157,12 +151,10 @@ interrupt_handler(void)
 	irq_handler(vector);
 	interrupt_disable();
 
-	IRQ_MASK_LO |= bits;
-
 	/* Restore interrupt level */
 	irq_level = old_ipl;
 	update_mask();
-out:
+	IRQ_MASK |= bits;
 	return;
 }
 
