@@ -71,6 +71,9 @@ machine_init(void)
 {
 	printf("machine init\n");
 	
+	cpu_init();
+	cache_init();
+
 	page_reserve(SYSPAGE_BASE, SYSPAGE_SIZE);
 	vector_copy(SYSPAGE_BASE);
 /*	
