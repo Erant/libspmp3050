@@ -28,28 +28,16 @@
  */
 
 /*
- * serial.c - Serial console driver for Integrator-CP (PL011 UART)
+ * serial.c - Serial console driver for SPMP
  */
 
 #include <driver.h>
 #include <sys/ioctl.h>
 #include <sys/tty.h>
+#include "../../../sys/arch/arm/spmp/platform.h"
 
 #define TERM_COLS	80
 #define TERM_ROWS	25
-
-
-#define	IO_BASE				0x10000000
-
-#define UART_BASE			(IO_BASE + 0x1800)
-#define	UART(n)				(UART_BASE + (n << 5))
-#define UART_FIFO(n)			( *(volatile unsigned char*) (UART(n) + 0x02) )
-#define UART_STATUS(n)			( *(volatile unsigned char*) (UART(n) + 0x0A) )
-#define UART_ENABLE(n)			( *(volatile unsigned char*) ((UART_BASE + 0x80)) |= (1 << n))
-#define UART_DISABLE(n)			( *(volatile unsigned char*) ((UART_BASE + 0x80)) &= ~(1 << n))
-
-#define UART_TX_BUSY			0x02
-#define UART_RX_VALID			0x04
 
 #define	UART_N				1	/* the only useful one? */
 
@@ -84,47 +72,25 @@ static struct devio serial_io = {
 
 static device_t serial_dev;	/* device object */
 static struct tty serial_tty;	/* tty structure */
-/*static irq_t serial_irq;*/	/* handle for irq */
+static irq_t serial_irq;	/* handle for irq */
 
-static int
-serial_read(device_t dev, char *buf, size_t *nbyte, int blkno)
+static int serial_read(device_t dev, char *buf, size_t *nbyte, int blkno)
 {
-	int nread = 0;
-	
-	while ((UART_STATUS(UART_N) & UART_RX_VALID)) {
-		if (nread == *nbyte) return nread;
-		buf[nread] = UART_FIFO(UART_N);
-	}
-	
-	return nread;
-/*	return tty_read(&serial_tty, buf, nbyte);*/
+	return tty_read(&serial_tty, buf, nbyte);
 }
 
-static int
-serial_write(device_t dev, char *buf, size_t *nbyte, int blkno)
+static int serial_write(device_t dev, char *buf, size_t *nbyte, int blkno)
 {
-	int n;
-
-	for (n=0; n<*nbyte; n++) {
-		serial_putc(buf[n]);
-	}
-
-    if (*nbyte && buf[n-1]=='\n')
-      serial_putc('\r');
-
-	return n;
-/*	return tty_write(&serial_tty, buf, nbyte);*/
+	return tty_write(&serial_tty, buf, nbyte);
 }
 
-static int
-serial_ioctl(device_t dev, u_long cmd, void *arg)
+static int serial_ioctl(device_t dev, u_long cmd, void *arg)
 {
 
 	return tty_ioctl(&serial_tty, cmd, arg);
 }
 
-static void
-serial_putc(char c)
+static void serial_putc(char c)
 {
 	while (UART_STATUS(UART_N) & UART_TX_BUSY);
 	UART_FIFO(UART_N) = c;
@@ -133,8 +99,7 @@ serial_putc(char c)
 /*
  * Start output operation.
  */
-static void
-serial_start(struct tty *tp)
+static void serial_start(struct tty *tp)
 {
 	int c;
 
@@ -147,45 +112,40 @@ serial_start(struct tty *tp)
 	sched_unlock();
 }
 
+static int serial_buffer_empty(int uart){
+	if(!(UART_STATUS(uart) & UART_RX_VALID))
+		return 0;
+	return 1;
+}
+
 /*
  * Interrupt service routine
- *
-static int
-serial_isr(int irq)
+ */
+static int serial_isr(int irq)
 {
 	int c;
-
-	if (UART_MIS & MIS_RX) {
-		while (UART_FR & FR_RXFE)
-			;
-		do {
-			c = UART_DR;
-			tty_input(c, &serial_tty);
-		} while ((UART_FR & FR_RXFE) == 0);
-		UART_ICR = ICR_RX;
-	}
-	if (UART_MIS & MIS_TX) {
-		tty_done(&serial_tty);
-		UART_ICR = ICR_TX;
-	}
+	while(!serial_buffer_empty(UART_N))
+		tty_input(UART_FIFO(UART_N), &serial_tty);
 	return 0;
 }
-*/
 
-static int
-serial_puts(char *str)
+
+static int serial_puts(char *str)
 {
 	char *pc = str;
 	while (*pc != 0) serial_putc(*pc++);
-	
+
+	/* This shouldn't really go here, but what the hell... */
+	tty_done(&serial_tty);
 	return 0;
 }
 
 /*
  * Initialize
  */
-static int
-serial_init(void)
+
+#define CLOCK_IRQ	6
+static int serial_init(void)
 {
 
 	/* Initialize port */
@@ -198,13 +158,27 @@ serial_init(void)
 	
 	UART_ENABLE(UART_N);
 	
-	serial_puts("initializing serial tty\n");
+	serial_puts("initializing serial tty\r\n");
 
 	/* Create device object */
 	serial_dev = device_create(&serial_io, "console", DF_CHR);
 	ASSERT(serial_dev);
 
 	tty_attach(&serial_io, &serial_tty);
+
+	serial_puts("initializing serial timer hax\r\n");
+
+	TIMER_PERIOD(CLOCK_IRQ - 4) = 1200;
+	TIMER_COUNTER(CLOCK_IRQ - 4) = 1000 - 1;
+	TIMER_FLAGS(CLOCK_IRQ - 4) = TIMER_REPEAT;
+
+	serial_irq = irq_attach(CLOCK_IRQ, IPL_CLOCK, 0, &serial_isr, NULL);
+	ASSERT(serial_irq != NULL);
+
+	TIMER_ENABLE |= 1 << (CLOCK_IRQ - 4);
+
+	IRQ_ENABLE_LO |= 1 << CLOCK_IRQ;
+	IRQ_MASK_LO |= 1 << CLOCK_IRQ;
 
 	serial_tty.t_oproc = serial_start;
 	serial_tty.t_winsize.ws_row = (u_short)TERM_ROWS;
