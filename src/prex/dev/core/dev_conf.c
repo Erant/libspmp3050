@@ -43,6 +43,7 @@ extern struct driver rtc_drv;
 extern struct driver tty_drv;
 extern struct driver zero_drv;
 extern struct driver serial_drv;
+extern struct driver lcd_drv;
 
 /*
  * Driver table
@@ -88,5 +89,6 @@ struct driver *driver_table[] = {
 #ifdef CONFIG_SERIAL
 	&serial_drv,
 #endif
+    &lcd_drv,
 	NULL
 };
