@@ -27,12 +27,93 @@
  * SUCH DAMAGE.
  */
 
+#include <unistd.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <prex/prex.h>
 
 int
 main(int argc, char *argv[])
 {
-	printf("Hello World!\n");
-	return 0;
+  int x,y;
+  struct info_timer info;
+ 	u_long start, end;
+
+    int fd = open( "/dev/lcd", O_RDWR );
+    if (fd!=-1)
+      printf("got lcd device in fd %d\n", fd );
+    else
+      printf("NO LCD device driver in /dev/lcd, omgwtf\n");
+
+ again:
+
+  sys_info(INFO_TIMER, &info);
+  printf("Hello World!\n");
+  printf("we're running at %d hz\n", info.hz );
+  for(x=0;x<10;x++)
+    {
+      sleep(1);
+      printf("i=%d\n", x );
+      if (fd!=-1)
+        {
+          unsigned char ch = x&1;
+          write( fd,  &ch, 1  );
+        }
+    }
+
+  sys_time(&start);
+
+
+  float zoom = 3.0;
+  for(y=0;y<40;y++)
+    {
+    for(x=0;x<80;x++)
+      {
+        const int MaxIterations = 64;
+        const float Limit = 4;
+        int numIterations = 0;
+        float a1 = (x-40.0)*0.1/zoom;
+        float ax = a1;
+        float b1 = (y-20.0)*0.2/zoom;
+        float ay = b1;
+        
+        do 
+          {
+            ++numIterations;
+            float a2 = (a1 * a1) - (b1 * b1) + ax;
+            float b2 = (2 * a1 * b1) + ay;
+            if ((a2 * a2) + (b2 * b2) > Limit)
+              break;
+            
+            ++numIterations;
+            a1 = (a2 * a2) - (b2 * b2) + ax;
+            b1 = (2 * a2 * b2) + ay;
+            if ((a1 * a1) + (b1 * b1) > Limit)
+              break;
+          } while (numIterations < MaxIterations);
+        
+        {
+          unsigned char c = " .-=xX%@"[numIterations&7];
+          putchar( c );
+        }
+
+      }
+        printf("\n");
+}
+
+  sys_time(&end);
+
+  printf("mandelbrot took %d ticks\n", end-start );
+  {
+    int time = 1000*(end-start) / info.hz;
+    printf("which should roughly be %d milliseconds\n", time );
+  }
+
+  execve("/boot/cmdbox", 0, 0);
+  printf("exec failed, but we can still live on.. restarting..\n");
+  goto again;
+
+  return 0;
 }
