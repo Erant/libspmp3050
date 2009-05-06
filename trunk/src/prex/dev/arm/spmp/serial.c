@@ -109,6 +109,9 @@ serial_write(device_t dev, char *buf, size_t *nbyte, int blkno)
 		serial_putc(buf[n]);
 	}
 
+    if (*nbyte && buf[n-1]=='\n')
+      serial_putc('\r');
+
 	return n;
 /*	return tty_write(&serial_tty, buf, nbyte);*/
 }
