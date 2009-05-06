@@ -75,7 +75,7 @@ typedef unsigned long uint32_t;
 /*--- LCD ---*/
 #define LCD_BASE				(IO_BASE + 0xA000)
 #define LCD_DATA				(*(volatile uint16_t*)(LCD_BASE + 0x196))
-#define LCD_DATA_EXT			(*(volatile uint8_t*)(LCD_BASE + 0xE4))		// Useless, should be for an 18 bit bus, but we only have 16
+#define LCD_DATA_EXT			(*(volatile uint8_t*)(LCD_BASE + 0xE4))		/* Useless, should be for an 18 bit bus, but we only have 16 */
 #define LCD_CTRL				(*(volatile uint8_t*)(LCD_BASE + 0x195))
 #define	LCD_nRS					0x04
 #define LCD_CS					0x20
