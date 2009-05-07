@@ -128,6 +128,8 @@ static int serial_isr(int irq)
 	int c;
 	while(!serial_buffer_empty(UART_N))
 		tty_input(UART_FIFO(UART_N), &serial_tty);
+	IRQ_FLAG_LO |= 1 << SERIAL_IRQ;	/* Clear the interrupt. */
+
 	return 0;
 }
 

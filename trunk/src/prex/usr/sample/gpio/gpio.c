@@ -1,5 +1,5 @@
-/*-
- * Copyright (c) 2007, Kohsuke Ohtani
+/*
+ * Copyright (c) 2005-2006, Tristan Schaap
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,74 +27,35 @@
  * SUCH DAMAGE.
  */
 
-#include <driver.h>
+#include <unistd.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <prex/prex.h>
 
-extern struct driver console_drv;
-extern struct driver cpu_drv;
-extern struct driver cpufreq_drv;
-extern struct driver fdd_drv;
-extern struct driver kbd_drv;
-extern struct driver keypad_drv;
-extern struct driver null_drv;
-extern struct driver mouse_drv;
-extern struct driver pm_drv;
-extern struct driver ramdisk_drv;
-extern struct driver rtc_drv;
-extern struct driver tty_drv;
-extern struct driver zero_drv;
-extern struct driver serial_drv;
-extern struct driver lcd_drv;
-extern struct driver gpio_drv;
+int main(int argc, char *argv[]){
+    uint32_t buttons[2];
+    uint32_t prev_buttons[] = {0, 0};
+    int fd = open( "/dev/gpio", O_RDWR );
+    if (fd >= 0){
+	printf("Got GPIO device in fd %d\n", fd);
+    }
+    else
+    {
+	printf("Opening GPIO device failed, exiting.\n");
+	return -1;
+    }
+    printf("Reading buttons:\n");
+    while(1){
+        read(fd, &buttons, sizeof(buttons));
+	if(prev_buttons[0] != buttons[0] || prev_buttons[1] != buttons[1])
+	    printf("GPIO_A: 0x%08X\nGPIO_B: 0x%08X\n", buttons[0], buttons[1]);
 
-/*
- * Driver table
- */
-struct driver *driver_table[] = {
-#ifdef CONFIG_CONSOLE
-	&console_drv,
-#endif
-#ifdef CONFIG_CPUFREQ
-	&cpu_drv,
-	&cpufreq_drv,
-#endif
-#ifdef CONFIG_FDD
-	&fdd_drv,
-#endif
-#ifdef CONFIG_KEYBOARD
-	&kbd_drv,
-#endif
-#ifdef CONFIG_KEYPAD
-	&keypad_drv,
-#endif
-#ifdef CONFIG_NULL
-	&null_drv,
-#endif
-#ifdef CONFIG_MOUSE
-	&mouse_drv,
-#endif
-#ifdef CONFIG_PM
-	&pm_drv,
-#endif
-#ifdef CONFIG_RAMDISK
-	&ramdisk_drv,
-#endif
-#ifdef CONFIG_RTC
-	&rtc_drv,
-#endif
-#ifdef CONFIG_TTY
-	&tty_drv,
-#endif
-#ifdef CONFIG_ZERO
-	&zero_drv,
-#endif
-#ifdef CONFIG_SERIAL
-	&serial_drv,
-#endif
-#ifdef CONFIG_LCD
-	&lcd_drv,
-#endif
-#ifdef CONFIG_GPIO
-	&gpio_drv,
-#endif
-	NULL
-};
+	prev_buttons[0] = buttons[0];
+	prev_buttons[1] = buttons[1];
+    }
+
+    /* We never get here :P */
+    close(fd);
+}

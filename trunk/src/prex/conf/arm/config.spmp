@@ -49,6 +49,8 @@ options 	TTY		# TTY driver
 #options 	NULL		# NULL device
 #options 	ZERO		# Zero device
 options 	SERIAL		# Serial console
+options		LCD		# LCD device
+options		GPIO		# GPIO device
 
 #
 # Power management
