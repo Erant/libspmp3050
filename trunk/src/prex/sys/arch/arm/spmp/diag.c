@@ -34,63 +34,32 @@
 #include <kernel.h>
 #include <syspage.h>
 #include <cpu.h>
+#include <platform.h>
 
 #ifdef DEBUG
 
 #ifdef CONFIG_DIAG_SERIAL
 
-#define UART_FR		(*(volatile uint32_t *)(UART_BASE + 0x18))
-#define UART_DR		(*(volatile uint32_t *)(UART_BASE + 0x00))
-
-#define UART_STATUS	(*(volatile unsigned char*) (0x1000182A))
-#define UART_FIFO	(*(volatile unsigned char*) (0x10001822))
-#define UART_TX_BUSY	2
-
-
-/* Flag register */
-#define FR_RXFE		0x10	/* Receive FIFO empty */
-#define FR_TXFF		0x20	/* Transmit FIFO full */
-
+#define UART_N	1
 static void
 serial_putc(char c)
 {
-
-	while (UART_FR & FR_TXFF)
-		;
-	UART_DR = (uint32_t)c;
+	while(UART_STATUS(UART_N) & UART_TX_BUSY);
+		UART_FIFO(UART_N) = c;
 }
 #endif /* CONFIG_DIAG_SERIAL */
 
-void
-diag_print(char *buf)
-{
+void diag_print(char *buf){
 
 #ifdef CONFIG_DIAG_SERIAL
-/*
 	while (*buf) {
 		if (*buf == '\n')
 			serial_putc('\r');
 		serial_putc(*buf);
 		++buf;
 	}
-*/
-	char *pc = buf;
-	
-	while (*pc != 0) {
-		while(UART_STATUS & UART_TX_BUSY);
-		UART_FIFO = *pc;
-		pc++;
-	}
-    if (pc != buf && pc[-1]=='\n')
-      {
-		while(UART_STATUS & UART_TX_BUSY)
-          ;
-		UART_FIFO = '\r';
-      }
-      
 #endif
 }
-
 #endif /* DEBUG */
 
 /*
@@ -99,10 +68,9 @@ diag_print(char *buf)
 void
 diag_init(void)
 {
-
 #ifdef CONFIG_DIAG_SERIAL
 #ifdef CONFIG_MMU
-	mmu_premap((void *)0x16000000, (void *)UART_BASE);
+	mmu_premap((void *)0x10000000, (void *)IO_BASE);
 #endif
 #endif
 }
