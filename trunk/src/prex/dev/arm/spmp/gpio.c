@@ -45,21 +45,21 @@ static int gpio_ioctl(device_t, u_long, void *);
  * Driver structure
  */
 struct driver gpio_drv = {
-	/* name */	"GPIO Driver",
-	/* order */	4,
-	/* init */	gpio_init,
+    /* name */	"GPIO Driver",
+    /* order */	4,
+    /* init */	gpio_init,
 };
 
 /*
  * Device I/O table
  */
 static struct devio gpio_io = {
-	/* open */	NULL,
-	/* close */	NULL,
-	/* read */	gpio_read,
-	/* write */	gpio_write,
-	/* ioctl */	gpio_ioctl,
-	/* event */	NULL,
+    /* open */	NULL,
+    /* close */	NULL,
+    /* read */	gpio_read,
+    /* write */	gpio_write,
+    /* ioctl */	gpio_ioctl,
+    /* event */	NULL,
 };
 
 static device_t gpio_dev;	/* device object */
@@ -92,7 +92,29 @@ static int gpio_write(device_t dev, char *buf, size_t *nbyte, int blkno)
 
 static int gpio_ioctl(device_t dev, u_long cmd, void *arg)
 {
-	return 0;
+	switch(cmd){
+	case GPIO_IOC_GET:
+		((uint32_t*)arg)[0] = GPIO_A_IN;
+		((uint32_t*)arg)[1] = GPIO_B_IN;
+		return 0;
+	case GPIO_IOC_SET:
+		GPIO_A_OUT |= ((uint32_t*)arg)[0];
+		GPIO_B_OUT |= ((uint32_t*)arg)[1];
+		return 0;
+	case GPIO_IOC_CLEAR:
+		GPIO_A_OUT &= ~((uint32_t*)arg)[0];
+		GPIO_A_OUT &= ~((uint32_t*)arg)[1];
+		return 0;
+	case GPIO_IOC_SET_DIR_OUT:
+		GPIO_A_DIR |= ((uint32_t*)arg)[0];
+		GPIO_B_DIR |= ((uint32_t*)arg)[1];
+		return 0;
+	case GPIO_IOC_SET_DIR_IN:
+		GPIO_A_DIR &= ~((uint32_t*)arg)[0];
+		GPIO_B_DIR &= ~((uint32_t*)arg)[1];
+		return 0;
+	}
+	return -1;
 }
 
 /*
@@ -107,6 +129,5 @@ static int gpio_init(void)
 	/* Register the device */
 	gpio_dev = device_create(&gpio_io, "gpio", DF_CHR);
 	ASSERT(gpio_dev);
-
 	return 0;
 }
