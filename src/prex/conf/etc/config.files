@@ -56,6 +56,7 @@ bootfiles	$(SRCDIR)/usr/bin/init/init
 bootfiles	$(SRCDIR)/usr/bin/cmdbox/cmdbox
 bootfiles	$(SRCDIR)/doc/LICENSE
 bootfiles	$(SRCDIR)/usr/sample/hello/hello
+bootfiles	$(SRCDIR)/usr/sample/gpio/gpio
 
 #bootfiles	$(SRCDIR)/usr/test/args/args
 #bootfiles	$(SRCDIR)/usr/test/debug/debug
