@@ -39,7 +39,9 @@
 #define TERM_COLS	80
 #define TERM_ROWS	25
 
-#define	UART_N				1	/* the only useful one? */
+#define	UART_N		1	/* the only useful one? */
+
+#define SERIAL_IRQ	3
 
 
 /* Forward functions */
@@ -144,18 +146,19 @@ static int serial_puts(char *str)
  * Initialize
  */
 
-#define CLOCK_IRQ	6
 static int serial_init(void)
 {
 
 	/* Initialize port */
 	volatile unsigned char * uart_base = (volatile unsigned char*)UART(UART_N);
+	/* Magic values gleaned from the disasm */
 	uart_base[0x0] = 0x68;
 	uart_base[0x1] = 0x00;
 	uart_base[0x4] = 0xD0;
 	uart_base[0x5] = 0x11;
 	uart_base[0xF] = 0x88;
 	
+	UART_IRQ_REG(UART_N) |= UART_IRQ_RX;
 	UART_ENABLE(UART_N);
 	
 	serial_puts("initializing serial tty\r\n");
@@ -166,19 +169,13 @@ static int serial_init(void)
 
 	tty_attach(&serial_io, &serial_tty);
 
-	serial_puts("initializing serial timer hax\r\n");
-
-	TIMER_PERIOD(CLOCK_IRQ - 4) = 1200;
-	TIMER_COUNTER(CLOCK_IRQ - 4) = 1000 - 1;
-	TIMER_FLAGS(CLOCK_IRQ - 4) = TIMER_REPEAT;
-
-	serial_irq = irq_attach(CLOCK_IRQ, IPL_CLOCK, 0, &serial_isr, NULL);
+	serial_puts("initializing serial isr\r\n");
+	
+	serial_irq = irq_attach(SERIAL_IRQ, IPL_COMM, 0, &serial_isr, NULL);
 	ASSERT(serial_irq != NULL);
-
-	TIMER_ENABLE |= 1 << (CLOCK_IRQ - 4);
-
-	IRQ_ENABLE_LO |= 1 << CLOCK_IRQ;
-	IRQ_MASK_LO |= 1 << CLOCK_IRQ;
+	
+	IRQ_ENABLE_LO |= 1 << SERIAL_IRQ;
+	IRQ_MASK_LO |= 1 << SERIAL_IRQ;
 
 	serial_tty.t_oproc = serial_start;
 	serial_tty.t_winsize.ws_row = (u_short)TERM_ROWS;
