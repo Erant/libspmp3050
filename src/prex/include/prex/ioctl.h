@@ -91,4 +91,13 @@ struct __timeval {
 	long	tv_usec;	/* and microseconds */
 };
 
+/*
+ * GPIO control codes
+ */
+#define GPIO_IOC_GET			_IOR('G', 0, uint64_t)
+#define GPIO_IOC_SET			_IOW('G', 1, uint64_t)
+#define GPIO_IOC_CLEAR			_IOW('G', 2, uint64_t)
+#define GPIO_IOC_SET_DIR_OUT	_IOW('G', 3, uint64_t)
+#define GPIO_IOC_SET_DIR_IN		_IOW('G', 4, uint64_t)
+
 #endif /* !_PREX_IOCTL_H */
