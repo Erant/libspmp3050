@@ -48,12 +48,16 @@ typedef unsigned long uint32_t;
 #define UART_BASE				(IO_BASE + 0x1800)
 #define	UART(n)					(UART_BASE + (n << 5))
 #define UART_FIFO(n)			(*(volatile uint8_t*)(UART(n) + 0x02))
+#define UART_IRQ_REG(n)			(*(volatile uint8_t*)(UART(n) + 0x06));
 #define UART_STATUS(n)			(*(volatile uint8_t*)(UART(n) + 0x0A))
 #define UART_ENABLE(n)			(*(volatile uint8_t*)(UART_BASE + 0x80)) |= (1 << n)
 #define UART_DISABLE(n)			(*(volatile uint8_t*)(UART_BASE + 0x80)) &= ~(1 << n)
 
 #define UART_TX_BUSY			0x02
 #define UART_RX_VALID			0x04
+
+#define UART_IRQ_RX			0x02
+#define UART_IRQ_FIFO_FULL		0x08
 
 /*--- GPIO ---*/
 #define DEV_ENABLE				(*(volatile uint8_t*)(IO_BASE + 0x1100))
