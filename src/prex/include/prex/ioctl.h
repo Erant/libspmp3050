@@ -100,4 +100,11 @@ struct __timeval {
 #define GPIO_IOC_SET_DIR_OUT	_IOW('G', 3, uint64_t)
 #define GPIO_IOC_SET_DIR_IN		_IOW('G', 4, uint64_t)
 
+/*
+ * LCD control codes
+ */
+#define LCDIOC_SET_FB			_IOW('L', 0, void*)
+#define LCDIOC_DRAW				_IOW('L', 1, int)
+#define	LCDIOC_SET_BACKLIGHT	_IOW('L', 2, int)
+
 #endif /* !_PREX_IOCTL_H */
