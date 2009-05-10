@@ -23,7 +23,9 @@ void (*set_irq_handler)(int, int) = (void (*)(int,int))0x24028910;
 char itoa_buf[9];
 char rx_buf[256];
 
-uint16_t* fb = (uint16_t*)0x24164700;
+uint16_t* image = (uint16_t*)0x24164700;
+//uint16_t* fb = (uint16_t*)0x3C42B340;
+uint16_t* fb = (uint16_t*)0x3C400000;
 
 // -- convenience wrappers to help with the xmodem implementation.
 
@@ -88,9 +90,10 @@ int strlen(char* str){
 
 int main(){
 	uint8_t recv;
-	uint32_t prev_poke = 0, prev_peek = 0, offset = 0x24026EB4;
+	uint32_t prev_poke = 0, prev_peek = 0, offset = 0x24000000;
 	uint32_t r0, r1, r2, r3;
 	UART_Init(1);
+	*((uint32_t*)0x24000804) = 0x24026EB4; 	// Patch the bootloader to jump back to the original firmware when executed.
 	printString("\r\n");
 	
 	while(1){
@@ -108,7 +111,7 @@ int main(){
 		do{
 			while(UART_ReceiveBufferEmpty(1));
 			recv = UART_ReceiveByte(1);
-		}while(recv < '1' || recv > '9');
+		}while(recv < '1' || recv > '8');
 		recv -= 0x30;
 
 		switch(recv){
@@ -246,26 +249,15 @@ int main(){
 				TMR_Init(0, 12000, 10, TIMER_REPEAT);
 				enable_interrupts();
 				break;
-			case 8: // LCD crap testing
-				LCD_Init(3);
-				LCD_WriteFramebuffer(fb);
-				LCD_SetBacklight(1);
-				break;
-			case 9: // Graphics crap testing.
-				LCD_Init(3);
+			case 8: // Graphics crap testing.
 				LCD_SetBacklight(1);
 				for(int i = 0; i < 240; i++)
 					for(int j = 0; j < 320; j++)
 						fb[(i * 320) + j] = i ^ j;
-				uint32_t fb_start = (((uint32_t)fb) & 0xFFFFFF) >> 1;
-				GFX_FB_START = fb_start;
-				GFX_FB_END = fb_start + (320 * 240);
-				GFX_FB_HORIZ = 240;
-				GFX_FB_VERT = 320;
-				
-				GFX_BLIT = 1;
-				
-				//LCD_WriteFramebuffer(fb);
+						
+				LCD_Init(3);
+				LCD_SetFramebuffer(fb);
+				LCD_Draw();
 				break;
 		}
 	}

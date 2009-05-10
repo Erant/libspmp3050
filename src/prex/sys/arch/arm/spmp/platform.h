@@ -77,6 +77,10 @@ typedef unsigned long uint32_t;
 #define GPIO_DISABLE			(*(volatile uint32_t*)(GPIO_BASE + 0x320))
 
 /*--- LCD ---*/
+#define LCD_HEIGHT				320
+#define LCD_WIDTH				240
+#define LCD_BPP					16
+
 #define LCD_BASE				(IO_BASE + 0xA000)
 #define LCD_DATA				(*(volatile uint16_t*)(LCD_BASE + 0x196))
 #define LCD_DATA_EXT			(*(volatile uint8_t*)(LCD_BASE + 0xE4))		/* Useless, should be for an 18 bit bus, but we only have 16 */
@@ -90,6 +94,12 @@ typedef unsigned long uint32_t;
 
 #define LCD_RESET_REG			(*(volatile uint8_t*)(LCD_BASE + 0x1B1))
 #define LCD_RESET				0x80
+
+#define LCD_GFX_ENABLE			(*(volatile uint8_t*)(LCD_BASE + 0x0F))
+
+#define LCD_SCREEN_WIDTH		(*(volatile uint16_t*)(LCD_BASE + 0x1A0))
+#define LCD_SCREEN_HEIGHT		(*(volatile uint16_t*)(LCD_BASE + 0x1A2))
+#define LCD_SCREEN_UNK			(*(volatile uint16_t*)(LCD_BASE + 0x19E))
 
 /*--- Timers ---*/
 #define TIMER_PERIOD(n)			(*(volatile uint16_t*)(IO_BASE + 0x1318 + (n << 1)))

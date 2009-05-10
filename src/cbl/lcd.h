@@ -3,7 +3,8 @@
 
 void LCD_SetBacklight(int val);
 void LCD_Init(int lcd_type);
-void LCD_WriteFramebuffer(void* buf);
+void LCD_Draw();
+void LCD_SetFramebuffer(void* fb);
 
 // TEMPORARY, TESTING PURPOSES ONLY.
 void LCD_CtrlWrite(int reg, int val);

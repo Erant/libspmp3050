@@ -66,20 +66,29 @@ void LCD_SetBacklight(int val){
 		DEV_ENABLE_OUT &= ~0x8;
 }
 
-void LCD_AddrWrite(uint16_t val){
+oid LCD_AddrWrite(uint16_t val){
 	LCD_DATA = val;
+	
+	LCD_DATA_DIR |= LCD_OUT;
 	
 	LCD_CTRL = LCD_CS;
 	LCD_CTRL = LCD_CS | LCD_WR;
 	LCD_CTRL = LCD_CS;
+	LCD_CTRL = LCD_CS | LCD_nRS;
+	
+	LCD_DATA_DIR &= ~LCD_OUT;
 }
 
 void LCD_CmdWrite(uint16_t val){
 	LCD_DATA = val;
 	
+	LCD_DATA_DIR |= LCD_OUT;
+	
 	LCD_CTRL = LCD_CS | LCD_nRS;
 	LCD_CTRL = LCD_CS | LCD_nRS | LCD_WR;
 	LCD_CTRL = LCD_CS | LCD_nRS;
+	
+	LCD_DATA_DIR &= ~LCD_OUT;
 }
 
 void LCD_CtrlWrite(int reg, int val){
@@ -88,19 +97,9 @@ void LCD_CtrlWrite(int reg, int val){
 	LCD_CmdWrite(val);
 }
 
-void LCD_WriteFramebuffer(void* buf){
-    int i;
-	uint16_t* fb = (uint16_t*) buf;
-	LCD_DATA_DIR |= LCD_OUT;
-	
-	LCD_AddrWrite(0x22);
-	
-	LCD_CTRL = LCD_CS | LCD_nRS;
-	for(i = 0; i < 320 * 240; i++){
-		LCD_DATA = fb[i];
-		LCD_CTRL = LCD_WR | LCD_CS | LCD_nRS;
-		LCD_CTRL = LCD_CS | LCD_nRS;
-	}
+void LCD_Draw(){
+	LCD_GFX_ENABLE |= 2;
+	GFX_BLIT = 1;
 }
 
 void LCD_Init_0(){
@@ -255,37 +254,111 @@ void LCD_Reset(){
 	delay_us(50);
 }
 
+/*
+ *	Inits the LCD based on the lcd_type. This function is based on a LOT of magic register pokes.
+ *	Anything that uses the lcd_base pointer is a magic poke, and we don't know what it does.
+ */
 void LCD_Init(int lcd_type){
-  volatile uint8_t* lcd_base = (uint8_t*) LCD_BASE;
-	LCD_DATA_EXT &= 0x3;
+	volatile uint8_t* lcd_base = LCD_BASE;
+	LCD_DATA_EXT = 0;
 	
-	/* // Magic register pokes. Peripheral turn-on? */
-	*((volatile uint32_t*)0x10000008) |= 0x100;
-	*((volatile uint32_t*)0x10000110) |= 0x02004000;
+	// Magic register pokes. Peripheral turn-on?
+//	*((volatile uint32_t*)0x10000008) |= 0x100;
+//	*((volatile uint32_t*)0x10000110) |= 0x02004000;
+	*((volatile uint32_t*)0x10000008) = 0xFFFFFFFF;
+	*((volatile uint32_t*)0x10000110) = 0xFFFFFFFF;
 
 	lcd_base[0] |= 0x1;
-	lcd_base[0xF] |= 0x1;
+	LCD_GFX_ENABLE = 1;
 	lcd_base[0x1B9] |= 0x80;
 	
 	LCD_Reset();
 	
 	switch(lcd_type){
 		case 0:
-          LCD_Init_0();
+			break;
+		case 1:
+			break;
+		case 2:
 			break;
 		case 3:
 			LCD_Init_3();
 			break;
+		case 4:
+			break;
+		case 5:
+			break;
+		case 6:
+			break;
+		case 7:
+			break;
 		default:
-          printf("LCD type %d is not supported, please port the init code yourself (see lcd.c init_0)\n");
-          return;
+			return;
 	}
+	LCD_AddrWrite(0x22);
 	
 	lcd_base[0x1B2] &= ~0x1;
 	lcd_base[0x1BA] |= 0x1;
 	lcd_base[0x1B2] |= 0x1;
+	
+	// Do the voodoo that makes hardware acceleration work.
+	LCD_DoMagic();
 }
 
+void LCD_SetFramebuffer(void* fb){
+	GFX_FB_START = ((uint32_t)fb) >> 1;
+	GFX_FB_END = (((uint32_t)fb) + LCD_WIDTH * LCD_HEIGHT * (LCD_BPP / 8)) >> 1;
+	GFX_FB_HORIZ = LCD_WIDTH;
+	GFX_FB_VERT = LCD_HEIGHT;
+}
+
+void LCD_DoMagic(){
+	uint16_t temp;
+	volatile uint8_t* lcd_base = LCD_BASE;
+	// LCD_init
+	lcd_base[0x242] = 0x5;
+	lcd_base[0x203] &= ~0x1;
+	lcd_base[0x204] = 0xD;
+	lcd_base[0x205] = 1;
+	lcd_base[0x194] |= 0x4;
+	
+	lcd_base[0x203] |= 0x1;
+	
+	LCD_SCREEN_HEIGHT = LCD_HEIGHT;
+	LCD_SCREEN_WIDTH = LCD_WIDTH;
+	LCD_SCREEN_UNK = 0x0505;	
+
+	LCD_GFX_ENABLE = 1;
+	
+	// init_more_gfx
+	
+	lcd_base[0x100] = 0x4;
+	
+	lcd_base[0x1D1] = 0xA;
+	lcd_base[0x226] &= ~0x1;
+	
+	lcd_base[0x1DB] = 0x00;
+	lcd_base[0x1DC] = 0xFC;
+	lcd_base[0x1DD] = 0x00;
+	lcd_base[0x1DE] = 0xFF;
+	lcd_base[0x1DF] = 0xFF;
+	lcd_base[0x1E0] = 0xFF;
+	
+	// Unaligned access for resize_screen
+	temp = LCD_WIDTH - 1;
+	lcd_base[0x145] = temp & 0xFF;
+	lcd_base[0x146] = (temp >> 8) & 0xFF;
+	
+	lcd_base[0x14D] = temp & 0xFF;
+	lcd_base[0x14E] = (temp >> 8) & 0xFF;
+	
+	temp = LCD_HEIGHT - 1;
+	lcd_base[0x147] = temp & 0xFF;
+	lcd_base[0x148] = (temp >> 8) & 0xFF;
+
+	lcd_base[0x14F] = temp & 0xFF;
+	lcd_base[0x150] = (temp >> 8) & 0xFF;
+}
 
 void LCD_GenTestImage()
 {
@@ -318,7 +391,7 @@ static int lcd_init(void)
   LCD_Init( deviceType );
   LCD_SetBacklight( 1 );
 
-  LCD_GenTestImage();
+  /* LCD_GenTestImage(); Won't work with the new LCD code. */
 
   return 0;
 }
