@@ -46,7 +46,7 @@ void delay_ms( int ms )
   while(--ms)
     {
       int a;
-      for (a=0;a<100;a++)
+      for (a=0;a<1000;a++)
         bananana = bananana* 11 ^ bananana + 2;
     }
 
@@ -101,6 +101,77 @@ void LCD_WriteFramebuffer(void* buf){
 		LCD_CTRL = LCD_WR | LCD_CS | LCD_nRS;
 		LCD_CTRL = LCD_CS | LCD_nRS;
 	}
+}
+
+void LCD_Init_0(){
+  /* todo: generate this from the ida code */
+  /* btw, this does magic:
+      cat ida.disassembly.txt | awk '($2=="MOV" || $2=="MOVNE") {gsub("#","",$4); reg[$3]=$4} ($3=="sub_240D6260") { print "LCD_CtrlWrite( "reg["R0,"],",",reg["R1,"]" );" } ($3=="sub_240C8404") {print "delay_ms( ",reg["R0,"],");" }' > lcd_init_code_lcd0.generated
+  */
+
+  printf("Init code for LCD type 0 is highly experimental.\n");
+
+  LCD_CtrlWrite( 0 , 1 );
+  LCD_CtrlWrite( 1 , 0x100 );
+  LCD_CtrlWrite( 2 , 0x400 );
+  LCD_CtrlWrite( 3 , 0x1030 );
+  LCD_CtrlWrite( 4 , 0 );
+  LCD_CtrlWrite( 8 , 0x202 );
+  LCD_CtrlWrite( 9 , 0 );
+  LCD_CtrlWrite( 0xC , 1 );
+  LCD_CtrlWrite( 0xD , 0 );
+  LCD_CtrlWrite( 0xF , 0 );
+  LCD_CtrlWrite( 0x10 , 0 );
+  LCD_CtrlWrite( 0x11 , 7 );
+  LCD_CtrlWrite( 0x12 , 0 );
+  LCD_CtrlWrite( 0x13 , 0 );
+  delay_ms(  0x32 );
+  LCD_CtrlWrite( 0x10 , 0x17B0 );
+  LCD_CtrlWrite( 0x11 , 1 );
+  delay_ms(  0x32 );
+  LCD_CtrlWrite( 0x12 , 0x13C );
+  delay_ms(  0x32 );
+  LCD_CtrlWrite( 0x13 , 0x1300 );
+  LCD_CtrlWrite( 0x29 , 4 );
+  delay_ms(  0x32 );
+  LCD_CtrlWrite( 0x20 , 0 );
+  LCD_CtrlWrite( 0x21 , 0 );
+  LCD_CtrlWrite( 0x2B , 0x20 );
+  LCD_CtrlWrite( 0x30 , 0 );
+  LCD_CtrlWrite( 0x31 , 0x306 );
+  LCD_CtrlWrite( 0x32 , 0x200 );
+  LCD_CtrlWrite( 0x35 , 0x107 );
+  LCD_CtrlWrite( 0x36 , 0x404 );
+  LCD_CtrlWrite( 0x37 , 0x606 );
+  LCD_CtrlWrite( 0x38 , 0x505 );
+  LCD_CtrlWrite( 0x39 , 0x707 );
+  LCD_CtrlWrite( 0x3C , 0x606 );
+  LCD_CtrlWrite( 0x3D , 0x807 );
+  LCD_CtrlWrite( 0x50 , 0 );
+  LCD_CtrlWrite( 0x51 , 0xEF );
+  LCD_CtrlWrite( 0x52 , 0 );
+  LCD_CtrlWrite( 0x53 , 0x13F );
+  LCD_CtrlWrite( 0x60 , 0x2700 );
+  LCD_CtrlWrite( 0x61 , 1 );
+  LCD_CtrlWrite( 0x6A , 0 );
+  LCD_CtrlWrite( 0x80 , 0 );
+  LCD_CtrlWrite( 0x81 , 0 );
+  LCD_CtrlWrite( 0x82 , 0 );
+  LCD_CtrlWrite( 0x83 , 0 );
+  LCD_CtrlWrite( 0x84 , 0 );
+  LCD_CtrlWrite( 0x85 , 0 );
+  LCD_CtrlWrite( 0x90 , 0x13 );
+  LCD_CtrlWrite( 0x92 , 0 );
+  LCD_CtrlWrite( 0x93 , 3 );
+  LCD_CtrlWrite( 0x95 , 0x110 );
+  LCD_CtrlWrite( 0x97 , 0 );
+  LCD_CtrlWrite( 0x98 , 0 );
+  LCD_CtrlWrite( 7 , 1 );
+  delay_ms(  0x32 );
+  LCD_CtrlWrite( 7 , 0x21 );
+  LCD_CtrlWrite( 7 , 0x23 );
+  delay_ms(  0x32 );
+  LCD_CtrlWrite( 7 , 0x170 );
 }
 
 void LCD_Init_3(){
@@ -200,24 +271,14 @@ void LCD_Init(int lcd_type){
 	
 	switch(lcd_type){
 		case 0:
-			break;
-		case 1:
-			break;
-		case 2:
+          LCD_Init_0();
 			break;
 		case 3:
 			LCD_Init_3();
 			break;
-		case 4:
-			break;
-		case 5:
-			break;
-		case 6:
-			break;
-		case 7:
-			break;
 		default:
-			return;
+          printf("LCD type %d is not supported, please port the init code yourself (see lcd.c init_0)\n");
+          return;
 	}
 	
 	lcd_base[0x1B2] &= ~0x1;
@@ -235,23 +296,28 @@ void LCD_GenTestImage()
   
   LCD_CTRL = LCD_CS | LCD_nRS;
   for(i = 0; i < 320 * 240; i++){
-    LCD_DATA = (i % 320) + (i /320)<<8;
+    LCD_DATA = i*i;
     LCD_CTRL = LCD_WR | LCD_CS | LCD_nRS;
     LCD_CTRL = LCD_CS | LCD_nRS;
   }
 }
 
-
 /* wrappers for the above */
 static int lcd_init(void)
 {
+  unsigned char c;
+  unsigned char deviceType = *((unsigned char*)(0x2433f982));
+  printf("Your LCD device could be type %d, but we force init type 3\n", deviceType );
+  deviceType = 3;
+
   /* Create LCD device as an alias of the registered device. */
   lcd_dev = device_create(&lcd_io, "lcd", DF_CHR);
   if (lcd_dev == DEVICE_NULL)
     return -1;
 
-  LCD_Init(3);
-  LCD_SetBacklight(  1 );
+  LCD_Init( deviceType );
+  LCD_SetBacklight( 1 );
+
   LCD_GenTestImage();
 
   return 0;
