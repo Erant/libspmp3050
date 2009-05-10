@@ -66,7 +66,7 @@ void LCD_SetBacklight(int val){
 		DEV_ENABLE_OUT &= ~0x8;
 }
 
-oid LCD_AddrWrite(uint16_t val){
+void LCD_AddrWrite(uint16_t val){
 	LCD_DATA = val;
 	
 	LCD_DATA_DIR |= LCD_OUT;
@@ -262,9 +262,7 @@ void LCD_Init(int lcd_type){
 	volatile uint8_t* lcd_base = LCD_BASE;
 	LCD_DATA_EXT = 0;
 	
-	// Magic register pokes. Peripheral turn-on?
-//	*((volatile uint32_t*)0x10000008) |= 0x100;
-//	*((volatile uint32_t*)0x10000110) |= 0x02004000;
+	/* Magic register pokes. Peripheral turn-on? */
 	*((volatile uint32_t*)0x10000008) = 0xFFFFFFFF;
 	*((volatile uint32_t*)0x10000110) = 0xFFFFFFFF;
 
@@ -301,7 +299,7 @@ void LCD_Init(int lcd_type){
 	lcd_base[0x1BA] |= 0x1;
 	lcd_base[0x1B2] |= 0x1;
 	
-	// Do the voodoo that makes hardware acceleration work.
+	/* Do the voodoo that makes hardware acceleration work. */
 	LCD_DoMagic();
 }
 
@@ -315,7 +313,7 @@ void LCD_SetFramebuffer(void* fb){
 void LCD_DoMagic(){
 	uint16_t temp;
 	volatile uint8_t* lcd_base = LCD_BASE;
-	// LCD_init
+	/* LCD_init */
 	lcd_base[0x242] = 0x5;
 	lcd_base[0x203] &= ~0x1;
 	lcd_base[0x204] = 0xD;
@@ -330,7 +328,7 @@ void LCD_DoMagic(){
 
 	LCD_GFX_ENABLE = 1;
 	
-	// init_more_gfx
+	/* init_more_gfx */
 	
 	lcd_base[0x100] = 0x4;
 	
@@ -344,7 +342,7 @@ void LCD_DoMagic(){
 	lcd_base[0x1DF] = 0xFF;
 	lcd_base[0x1E0] = 0xFF;
 	
-	// Unaligned access for resize_screen
+	/* Unaligned access for resize_screen */
 	temp = LCD_WIDTH - 1;
 	lcd_base[0x145] = temp & 0xFF;
 	lcd_base[0x146] = (temp >> 8) & 0xFF;
