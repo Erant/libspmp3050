@@ -388,7 +388,7 @@ static int lcd_init(void)
     return -1;
 
   LCD_Init( deviceType );
-  LCD_SetBacklight( 1 );
+  /* LCD_SetBacklight( 1 ); */
 
   /* LCD_GenTestImage(); Won't work with the new LCD code. */
 

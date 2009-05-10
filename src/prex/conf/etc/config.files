@@ -10,6 +10,7 @@ boottasks	$(SRCDIR)/usr/server/boot/boot
 boottasks	$(SRCDIR)/usr/server/proc/proc
 boottasks	$(SRCDIR)/usr/server/fs/fs
 boottasks	$(SRCDIR)/usr/server/exec/exec
+boottasks	$(SRCDIR)/usr/sample/lcd/lcd
 boottasks	$(SRCDIR)/usr/sample/hello/hello
 
 #boottasks	$(SRCDIR)/usr/sample/alarm/alarm
