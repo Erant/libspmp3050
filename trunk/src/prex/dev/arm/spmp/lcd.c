@@ -2,6 +2,7 @@
 
 #include <sys/ioctl.h>
 #include <sys/tty.h>
+#include <prex/ioctl.h>
 
 #include "../../../sys/arch/arm/spmp/platform.h"
 
@@ -17,7 +18,7 @@ static int lcd_ioctl(device_t, u_long, void *);
  * Driver structure
  */
 struct driver lcd_drv = {
-	/* name */	"LCD controller (raw interface)",
+	/* name */	"LCD controller",
 	/* order */	4,
 	/* init */	lcd_init,
 };
@@ -35,8 +36,6 @@ static struct devio lcd_io = {
 };
 
 static device_t lcd_dev;	/* device object */
-static struct tty lcd;	/* lcd structure */
-
 
 int lcd_mode = 0;
 
@@ -98,7 +97,6 @@ void LCD_CtrlWrite(int reg, int val){
 }
 
 void LCD_Draw(){
-	LCD_GFX_ENABLE |= 2;
 	GFX_BLIT = 1;
 }
 
@@ -258,8 +256,11 @@ void LCD_Reset(){
  *	Inits the LCD based on the lcd_type. This function is based on a LOT of magic register pokes.
  *	Anything that uses the lcd_base pointer is a magic poke, and we don't know what it does.
  */
+
+void LCD_DoMagic();
+
 void LCD_Init(int lcd_type){
-	volatile uint8_t* lcd_base = LCD_BASE;
+	volatile uint8_t* lcd_base = (volatile uint8_t*)LCD_BASE;
 	LCD_DATA_EXT = 0;
 	
 	/* Magic register pokes. Peripheral turn-on? */
@@ -308,11 +309,12 @@ void LCD_SetFramebuffer(void* fb){
 	GFX_FB_END = (((uint32_t)fb) + LCD_WIDTH * LCD_HEIGHT * (LCD_BPP / 8)) >> 1;
 	GFX_FB_HORIZ = LCD_WIDTH;
 	GFX_FB_VERT = LCD_HEIGHT;
+	LCD_GFX_ENABLE |= 2;	/* Possibly 'reinitialize framebuffer' */
 }
 
 void LCD_DoMagic(){
 	uint16_t temp;
-	volatile uint8_t* lcd_base = LCD_BASE;
+	volatile uint8_t* lcd_base = (volatile uint8_t*)LCD_BASE;
 	/* LCD_init */
 	lcd_base[0x242] = 0x5;
 	lcd_base[0x203] &= ~0x1;
@@ -376,7 +378,6 @@ void LCD_GenTestImage()
 /* wrappers for the above */
 static int lcd_init(void)
 {
-  unsigned char c;
   unsigned char deviceType = *((unsigned char*)(0x2433f982));
   printf("Your LCD device could be type %d, but we force init type 3\n", deviceType );
   deviceType = 3;
@@ -409,7 +410,22 @@ static int lcd_write(device_t dev, char *buf, size_t *nbyte, int blkno)
 
 static int lcd_ioctl(device_t dev, u_long cmd, void *arg)
 {
-  return 0;
+	switch(cmd){
+		case LCDIOC_SET_FB:
+			/* printf("Setting framebuffer to %08X.\n", *((void**)arg)); */
+			LCD_SetFramebuffer(arg);
+			return 0;
+		case LCDIOC_SET_BACKLIGHT:
+			/* printf("Setting backlight.\n"); */
+			LCD_SetBacklight(((int)arg));
+			return 0;
+		case LCDIOC_DRAW:
+			/* printf("Drawing framebuffer.\n"); */
+			LCD_Draw();
+			return 0;
+	}
+	printf("Whoops, wrong ioctl received!\n");
+	return -1;
 }
 
 static int lcd_open(device_t dev, int mode)
