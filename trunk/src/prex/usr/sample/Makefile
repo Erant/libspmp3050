@@ -1,4 +1,4 @@
 SUBDIR=		alarm balls cpumon bench hello ipc mutex sem task thread \
-		tetris lzop gpio lrzsz lcd
+		tetris lzop gpio lrzsz lcd xxd
 
 include $(SRCDIR)/mk/subdir.mk

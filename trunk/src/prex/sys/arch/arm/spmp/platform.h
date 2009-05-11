@@ -131,4 +131,22 @@ typedef unsigned long uint32_t;
 #define GFX_FB_HORIZ			(*(volatile uint16_t*)(GFX_BASE + 0x138))
 #define GFX_FB_VERT				(*(volatile uint16_t*)(GFX_BASE + 0x13A))
 
+/*--- NAND ---*/
+#define NAND_BASE				(IO_BASE + 0x4000)
+#define NAND_ENABLE				(*(volatile uint8_t*)(NAND_BASE))
+#define NAND_DATA				(*(volatile uint8_t*)(NAND_BASE + 0x20))
+
+#define NAND_CTRL_LO			(*(volatile uint8_t*)(NAND_BASE + 0x22))
+#define NAND_CTRL_RE			0x2
+
+#define NAND_CTRL_HI			(*(volatile uint8_t*)(NAND_BASE + 0x23))
+#define NAND_CTRL_CLE			0x8
+#define NAND_CTRL_ALE			0x4
+
+#define NAND_STATUS				(*(volatile uint8_t*)(NAND_BASE + 0x104))
+#define NAND_STATUS_READ_BUSY	0x08
+
+#define NAND_STATUS2			(*(volatile uint8_t*)(NAND_BASE + 0x24))
+#define NAND_STATUS_CMD_BUSY	0x01
+
 #endif

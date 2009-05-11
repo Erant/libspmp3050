@@ -46,11 +46,12 @@ options 	RAMDISK		# RAM disk
 options 	TTY		# TTY driver
 #options 	PM		# Power management
 #options 	CPUFREQ		# CPU frequency control
-#options 	NULL		# NULL device
-#options 	ZERO		# Zero device
+options 	NULL		# NULL device
+options 	ZERO		# Zero device
 options 	SERIAL		# Serial console
 options		LCD		# LCD device
 options		GPIO		# GPIO device
+options		NAND		# NAND device
 
 #
 # Power management

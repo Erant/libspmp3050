@@ -378,9 +378,7 @@ void LCD_GenTestImage()
 /* wrappers for the above */
 static int lcd_init(void)
 {
-  unsigned char deviceType = *((unsigned char*)(0x2433f982));
-  printf("Your LCD device could be type %d, but we force init type 3\n", deviceType );
-  deviceType = 3;
+  int deviceType = 3;
 
   /* Create LCD device as an alias of the registered device. */
   lcd_dev = device_create(&lcd_io, "lcd", DF_CHR);
