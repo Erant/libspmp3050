@@ -76,11 +76,13 @@ machine_init(void)
 
 	page_reserve(SYSPAGE_BASE, SYSPAGE_SIZE);
 	vector_copy(SYSPAGE_BASE);
-/*	
+	
 	#define REG(x) (*(volatile uint8_t*)(IO_BASE + x))
 	
-	REG(8) = 0x79;
-	REG(0x111) = 0xB2;
+	/* REG(8) = 0x79; */
+	/* REG(0x111) = 0xB2; */
+	*((uint32_t*)0x10000008) = 0xFFFFFFFF;
+	*((uint32_t*)0x10000110) = 0xFFFFFFFF;
 	{
 		uint8_t val;
 		
@@ -109,7 +111,7 @@ machine_init(void)
 				break;
 		}
 	}
-	
+/*	
 	SYS_REG = 1;
 */
 }
