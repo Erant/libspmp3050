@@ -12,8 +12,6 @@ void LCD_SetBacklight(int val){
 		DEV_ENABLE_OUT &= ~0x8;
 }
 
-v
-
 void LCD_Draw(){
 /*	uint16_t* fb = (uint16_t*) buf;
 	LCD_DATA_DIR |= LCD_OUT;
@@ -29,6 +27,38 @@ void LCD_Draw(){
 	LCD_GFX_ENABLE |= 2;
 	GFX_BLIT = 1;
 }
+
+void LCD_AddrWrite(uint16_t val){
+	LCD_DATA = val;
+	
+	LCD_DATA_DIR |= LCD_OUT;
+	
+	LCD_CTRL = LCD_CS;
+	LCD_CTRL = LCD_CS | LCD_WR;
+	LCD_CTRL = LCD_CS;
+	LCD_CTRL = LCD_CS | LCD_nRS;
+	
+	LCD_DATA_DIR &= ~LCD_OUT;
+}
+
+void LCD_CmdWrite(uint16_t val){
+	LCD_DATA = val;
+	
+	LCD_DATA_DIR |= LCD_OUT;
+	
+	LCD_CTRL = LCD_CS | LCD_nRS;
+	LCD_CTRL = LCD_CS | LCD_nRS | LCD_WR;
+	LCD_CTRL = LCD_CS | LCD_nRS;
+	
+	LCD_DATA_DIR &= ~LCD_OUT;
+}
+
+void LCD_CtrlWrite(int reg, int val){
+	LCD_DATA_DIR |= LCD_OUT;
+	LCD_AddrWrite(reg);
+	LCD_CmdWrite(val);
+}
+
 
 void LCD_Init_3(){
 	//--- Init sequence ---//
