@@ -1,3 +1,3 @@
-PROG=	hello
+PROG=	lcd
 
 include $(SRCDIR)/mk/prog.mk
