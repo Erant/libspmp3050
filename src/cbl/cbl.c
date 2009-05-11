@@ -3,6 +3,7 @@
 #include "../spmp3050/spmp3050.h"
 #include "uart.h"
 #include "lcd.h"
+#include "nand.h"
 #include "gpio.h"
 #include "xmodem.h"
 #include "util.h"
@@ -92,6 +93,7 @@ int main(){
 	uint8_t recv;
 	uint32_t prev_poke = 0, prev_peek = 0, offset = 0x24000000;
 	uint32_t r0, r1, r2, r3;
+	uint64_t nand_id = 0;
 	UART_Init(1);
 	*((uint32_t*)0x24000804) = 0x24026EB4; 	// Patch the bootloader to jump back to the original firmware when executed.
 	printString("\r\n");
@@ -111,7 +113,7 @@ int main(){
 		do{
 			while(UART_ReceiveBufferEmpty(1));
 			recv = UART_ReceiveByte(1);
-		}while(recv < '1' || recv > '8');
+		}while(recv < '1' || recv > '9');
 		recv -= 0x30;
 
 		switch(recv){
@@ -258,6 +260,15 @@ int main(){
 				LCD_Init(3);
 				LCD_SetFramebuffer(fb);
 				LCD_Draw();
+				break;
+			case 9: // NAND crap testing.
+				NAND_Init();
+				nand_id = NAND_ReadID();
+				
+				printString("NAND id: 0x");
+				printString(itoa(nand_id >> 32, itoa_buf));
+				printString(itoa(nand_id, itoa_buf));
+				printString("\r\n");
 				break;
 		}
 	}
