@@ -17,6 +17,8 @@ static int nand_ioctl(device_t, u_long, void *);
 #define offset_t uint64_t
 #define SECTOR_SIZE		2048
 #define ECC_SIZE		64
+
+static uint8_t sector_buf[SECTOR_SIZE];
 /*
  * Driver structure
  */
@@ -131,14 +133,12 @@ void NAND_ReadSector(void* buf, offset_t offset){
 	for(; i < SECTOR_SIZE; i++){
 		NAND_StrobeRead();
 		NAND_WaitReadBusy();
-		charbuf[i] = NAND_DATA;
+		charbuf[i] = NAND_ReadByte();
 	}
 }
 
 static int nand_init(void){
 	char nand_id[5];
-	char nand[0x100];
-	int i = 0;
 	/* Create NAND device as an alias of the registered device. */
 	nand_dev = device_create(&nand_io, "nand", DF_BLK);
 	if (nand_dev == DEVICE_NULL)
@@ -161,15 +161,13 @@ static int nand_init(void){
 }
 
 /* Horribly non-optimized, but it's late right now... */
-
 static int nand_read(device_t dev, char *buf, size_t *nbyte, int blkno)
 {
-	uint8_t sector_buf[SECTOR_SIZE];
 	uint8_t* kbuf = kmem_map(buf, *nbyte);
+	static int cur_blk = 0;
 	size_t todo = *nbyte;
-
+	int i = 0;
 	int sector, sub_sector;
-	sched_lock();
 	printf("Reading %d bytes from block %d.\n",todo, blkno);
 	if(!kbuf)
 		return EFAULT;
@@ -177,7 +175,6 @@ static int nand_read(device_t dev, char *buf, size_t *nbyte, int blkno)
 	while(todo > 0){
 		sector = blkno / 4;
 		sub_sector = blkno % 4;
-		printf("Reading sector %d\n", sector);
 		NAND_ReadSector(sector_buf, sector);
 		if(todo > SECTOR_SIZE){
 			memcpy(kbuf, sector_buf, SECTOR_SIZE);
@@ -192,9 +189,7 @@ static int nand_read(device_t dev, char *buf, size_t *nbyte, int blkno)
 		}
 		blkno++;
 	}
-	printf("Done!\n");
-	sched_unlock();
-	return *nbyte;
+	return 0;
 }
 
 static int nand_write(device_t dev, char *buf, size_t *nbyte, int blkno)
