@@ -14,7 +14,7 @@ static int nand_read(device_t, char *, size_t *, int);
 static int nand_write(device_t, char *, size_t *, int);
 static int nand_ioctl(device_t, u_long, void *);
 
-#define offset_t uint64_t
+#define offset_t uint32_t
 #define SECTOR_SIZE		2048
 #define ECC_SIZE		64
 
@@ -122,10 +122,10 @@ void NAND_ReadSector(void* buf, offset_t offset){
 	offset = offset * (SECTOR_SIZE + ECC_SIZE); 
 	NAND_WriteCmd(0x00);
 	NAND_WriteAddr(offset & 0xFF);
-	NAND_WriteAddr((offset >> 8) & 0xFF);
-	NAND_WriteAddr((offset >> 16) & 0xFF);
-	NAND_WriteAddr((offset >> 24) & 0xFF);
-	NAND_WriteAddr((offset >> 32) & 0xFF);
+	NAND_WriteAddr((offset >> 8) & 0x0F);
+	NAND_WriteAddr((offset >> 12) & 0xFF);
+	NAND_WriteAddr((offset >> 20) & 0xFF);
+	NAND_WriteAddr((offset >> 28) & 0x0F);
 	NAND_WriteCmd(0x30);
 	NAND_WaitCmdBusy();
 	NAND_WaitReadBusy();
