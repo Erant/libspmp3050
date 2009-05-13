@@ -73,7 +73,7 @@ options 	DIAG_SERIAL	# Diagnostic via serial port
 options 	DEVFS		# Device file system
 options 	RAMFS		# RAM file system
 options 	ARFS		# Archive file system
-#options 	FATFS		# FAT file system
+options 	FATFS		# FAT file system
 
 #
 # Executable file formats
