@@ -62,9 +62,9 @@ void printhex(uint8_t *buf, size_t n, uint32_t addr, int linew){
 	}
 }
 
-#define START	((0x201FDF00))
+#define START	((0 * 1024 * 1024) / 512)
 #define STEP	((512) / 512)
-#define END		((0x22FFD800))
+#define END		((1 * 1024 * 1024) / 512)
 int main(int argc, char *argv[])
 {
 	char buf[512];

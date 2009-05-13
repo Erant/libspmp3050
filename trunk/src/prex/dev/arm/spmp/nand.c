@@ -121,13 +121,11 @@ int NAND_ReadID(char* buf){
 	return -1;
 }
 
-void NAND_ReadSector(void* buf, offset_t offset){
+void NAND_ReadSector(void* buf, int sec_no){
 	int i = 0;
 	uint8_t* charbuf = (uint8_t*)buf;
-	/* offset = offset * (SECTOR_SIZE + ECC_SIZE); */
-	offset = offset * SECTOR_SIZE;
 	NAND_WriteCmd(0x00);
-	NAND_WriteAddr(offset);
+	NAND_WriteAddr(sec_no << 12);
 	NAND_WriteCmd(0x30);
 	NAND_WaitCmdBusy();
 	NAND_WaitReadBusy();
