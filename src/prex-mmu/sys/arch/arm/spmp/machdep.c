@@ -39,6 +39,30 @@
 #include <cpufunc.h>
 #include <platform.h>
 
+
+#ifdef CONFIG_MMU
+
+/*
+ * Virtual and physical address mapping
+ *
+ *      { virtual, physical, size, type }
+ */
+struct mmumap mmumap_table[] =
+{
+	/*
+	 * Internal SRAM (8M)
+	 */
+	{ 0xA4000000, 0x24000000, 0x800000, VMT_RAM },
+
+	/*
+	 * IO memory range (512M)
+	 */
+	{ 0x90000000, 0x10000000, 0x10000000, VMT_IO },
+
+	{ 0,0,0,0 }
+};
+#endif
+
 /*
  * Reset system.
  */
@@ -72,44 +96,15 @@ machine_init(void)
 	printf("machine init\n");
 	
 	cpu_init();
-	cache_init();
 
-	page_reserve(SYSPAGE_BASE, SYSPAGE_SIZE);
-	vector_copy(SYSPAGE_BASE);
-/*	
-	#define REG(x) (*(volatile uint8_t*)(IO_BASE + x))
-	
-	REG(8) = 0x79;
-	REG(0x111) = 0xB2;
-	{
-		uint8_t val;
-		
-		val = REG(0xB1) & 1;
-		
-		switch ((REG(0xB2) & 6) >> 1) {
-			case 0:
-				REG(0x136) = 11;
-				if (val == 1) REG(0x132) = 0;
-				break;
-		
-			case 1:
-				REG(0x136) = 13;
-				if (val == 1) {
-					REG(0x123) = 6;
-					REG(0x132) = 0;
-				}
-				break;
-		
-			case 2:
-				REG(0x136) = 15;
-				if (val == 1) {
-					REG(0x123) = 7;
-					REG(0x132) = 0;
-				}
-				break;
-		}
-	}
-	
-	SYS_REG = 1;
-*/
+#ifdef CONFIG_CACHE
+	cache_init();
+#endif
+
+	page_reserve(virt_to_phys(SYSPAGE_BASE), SYSPAGE_SIZE);
+	vector_copy(ARM_VECTORS);
+
+#ifdef CONFIG_MMU
+	mmu_init(mmumap_table);
+#endif
 }

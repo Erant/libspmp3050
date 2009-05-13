@@ -70,7 +70,7 @@ diag_init(void)
 {
 #ifdef CONFIG_DIAG_SERIAL
 #ifdef CONFIG_MMU
-	mmu_premap((void *)0x10000000, (void *)IO_BASE);
+	mmu_premap((void *)0x10001800, (void *)UART_BASE);
 #endif
 #endif
 }

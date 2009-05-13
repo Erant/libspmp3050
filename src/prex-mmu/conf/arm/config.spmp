@@ -6,10 +6,10 @@
 # Module address
 #
 memory		LOADER_BASE	0x24010000
-memory		KERNEL_BASE	0x24080000
+memory		KERNEL_BASE	0xA4080000
 memory		DRIVER_BASE	AUTODETECT
-memory		SYSPAGE_BASE	0x24000000
-memory		BOOTIMG_BASE	0x24012000
+memory		SYSPAGE_BASE	0x80000000
+memory		BOOTIMG_BASE	0xA4012000
 
 #
 # Make options
@@ -28,7 +28,7 @@ options 	FS_THREADS=4	# Number of file system threads
 #
 # Platform settings
 #
-#options 	MMU		# Memory management unit
+options 	MMU		# Memory management unit
 options 	CACHE		# Cache memory
 #options 	FPU		# Floating point unit
 #options 	ROMBOOT		# Boot from ROM

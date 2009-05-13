@@ -45,6 +45,11 @@
  * Kernel start point
  */
 ENTRY(kernel_start)
+	mov	r0, #0x10000000
+	add	r0, r0, #0x1800
+	mov	r1, #'B'
+	strb	r1, [r0, #0x22]
+
 #ifdef CONFIG_MMU
 	b	reset_entry		/* Relative jump */
 #endif

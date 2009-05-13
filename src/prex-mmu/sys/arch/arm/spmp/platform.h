@@ -29,20 +29,21 @@
 
 #ifndef _SPMP_PLATFORM_H
 #define _SPMP_PLATFORM_H
-/*
-typedef unsigned char uint8_t;
-typedef unsigned long uint32_t;
-*/
+
 /* vector relocation target */
-#define ARM_VECTORS	SYSPAGE_BASE
+#define ARM_VECTORS	virt_to_phys(SYSPAGE_BASE)
 
 /* base address of user stack */
-#define USTACK_BASE	(0x24200000 + PAGE_SIZE)
+#define USTACK_BASE	(0xA4200000)
 
 /* number of interrupt vectors */
 #define NIRQS		64
 
+#ifdef CONFIG_MMU
 #define	IO_BASE					(0x10000000)
+#else
+#define IO_BASE					(0x90000000)
+#endif
 
 /*--- UART ---*/
 #define UART_BASE				(IO_BASE + 0x1800)
