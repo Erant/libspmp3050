@@ -169,7 +169,9 @@ static int nand_read(device_t dev, char *buf, size_t *nbyte, int blkno)
 	size_t todo = *nbyte;
 	int i = 0;
 	int sector, sub_sector;
-	printf("Reading %d bytes from block %d.\n",todo, blkno);
+	/* Temporary addition */
+	blkno += 0x3E5000;
+	/* printf("Reading %d bytes from block %d.\n",todo, blkno); */
 	if(!kbuf)
 		return EFAULT;
 

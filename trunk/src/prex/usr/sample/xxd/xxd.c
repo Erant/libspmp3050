@@ -62,20 +62,38 @@ void printhex(uint8_t *buf, size_t n, uint32_t addr, int linew){
 	}
 }
 
-#define START	((0 * 1024 * 1024) / 512)
+
+#define START	((0x7C890000) / 512)
 #define STEP	((512) / 512)
-#define END		((1 * 1024 * 1024) / 512)
+#define END		((0x80000000) / 512)
+
 int main(int argc, char *argv[])
 {
 	char buf[512];
-	int i = START;
+	unsigned int i = START;
+	int j;
+	uint8_t temp;
 	int size = sizeof(buf);
 	device_t nand;
     device_open("nand", O_RDONLY, &nand);
 	
 	for(; i < (END); i += STEP){
 		device_read(nand, buf, &size, i);
-		printhex(buf, sizeof(buf), i * sizeof(buf), 16);
+		temp = 0;
+		/*
+		for(j = 0; j < sizeof(buf); j++)
+			temp |= buf[j] ^ 0xFF;
+		*/
+
+		if(buf[0x36] == 'F' && buf[0x37] == 'A' && buf[0x38] == 'T')
+			temp = 1;
+
+		if(temp){
+			printhex(buf, sizeof(buf), i * sizeof(buf), 16);
+			return 0;
+		}
+		else
+			printf("Sector %d is empty.\n", i);
 	}
 	device_close(nand);
 }
