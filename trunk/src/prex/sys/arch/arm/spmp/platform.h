@@ -147,6 +147,6 @@ typedef unsigned long uint32_t;
 #define NAND_STATUS_READ_BUSY	0x08
 
 #define NAND_STATUS2			(*(volatile uint8_t*)(NAND_BASE + 0x24))
-#define NAND_STATUS_CMD_BUSY	0x01
+#define NAND_STATUS_CMD_READY	0x01
 
 #endif

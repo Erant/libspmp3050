@@ -63,6 +63,11 @@ start_vector:
  * Start kernel
  */
 ENTRY(start_kernel)
+	mov	r0, #0x10000000
+	add	r0, r0, #0x1800
+	mov	r1, #'B'
+	strb	r1, [r0, #0x22]
+
 	bx	r0
 
 	.section .tail,"ax"

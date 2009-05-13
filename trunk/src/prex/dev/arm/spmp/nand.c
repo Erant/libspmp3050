@@ -23,7 +23,7 @@ static uint8_t sector_buf[SECTOR_SIZE];
  * Driver structure
  */
 struct driver nand_drv = {
-	/* name */	"NAND",
+	/* name */	"nand",
 	/* order */	4,
 	/* init */	nand_init,
 };
@@ -71,13 +71,18 @@ void NAND_WriteCmd(uint8_t cmd){
 	NAND_CTRL_HI &= ~NAND_CTRL_CLE;
 }
 
-void NAND_WriteAddr(uint8_t addr){
+void NAND_WriteAddr(uint32_t addr){
 	NAND_CTRL_HI = (NAND_CTRL_HI & ~NAND_CTRL_CLE) | NAND_CTRL_ALE;
-	NAND_DATA = addr;
+	NAND_DATA = addr & 0xFF;
+	NAND_DATA = (addr >> 8) & 0x0F;
+	NAND_DATA = (addr >> 12) & 0xFF;
+	NAND_DATA = (addr >> 20) & 0xFF;
+	NAND_DATA = (addr >> 28) & 0x0F;
 	NAND_CTRL_HI = (NAND_CTRL_HI & ~NAND_CTRL_CLE) | NAND_CTRL_ALE;
 	NAND_CTRL_HI &= ~NAND_CTRL_ALE;
 }
 
+/* Possibly broken, should check in disasm */
 int NAND_WaitReadBusy(){
 	int i = 0;
 	for(; i < 3000; i++){
@@ -90,7 +95,7 @@ int NAND_WaitReadBusy(){
 int NAND_WaitCmdBusy(){
 	int i = 0;
 	for(; i < 50000; i++){
-		if(!(NAND_STATUS2 & NAND_STATUS_CMD_BUSY))
+		if((NAND_STATUS2 & NAND_STATUS_CMD_READY))
 			return 0;
 	}
 	return -1;	
@@ -119,22 +124,20 @@ int NAND_ReadID(char* buf){
 void NAND_ReadSector(void* buf, offset_t offset){
 	int i = 0;
 	uint8_t* charbuf = (uint8_t*)buf;
-	offset = offset * (SECTOR_SIZE + ECC_SIZE); 
+	/* offset = offset * (SECTOR_SIZE + ECC_SIZE); */
+	offset = offset * SECTOR_SIZE;
 	NAND_WriteCmd(0x00);
-	NAND_WriteAddr(offset & 0xFF);
-	NAND_WriteAddr((offset >> 8) & 0x0F);
-	NAND_WriteAddr((offset >> 12) & 0xFF);
-	NAND_WriteAddr((offset >> 20) & 0xFF);
-	NAND_WriteAddr((offset >> 28) & 0x0F);
+	NAND_WriteAddr(offset);
 	NAND_WriteCmd(0x30);
 	NAND_WaitCmdBusy();
 	NAND_WaitReadBusy();
 
 	for(; i < SECTOR_SIZE; i++){
 		NAND_StrobeRead();
-		NAND_WaitReadBusy();
+		/* NAND_WaitReadBusy(); */
 		charbuf[i] = NAND_ReadByte();
 	}
+	NAND_Init();
 }
 
 static int nand_init(void){
