@@ -1,0 +1,27 @@
+CC = arm-elf-gcc
+LD = arm-elf-gcc
+AS = arm-elf-as
+AR = arm-elf-ar
+
+PRG = caveheli
+
+LIBS = -L/home/ck/gp32_SDK/lib -lmirkoSDK
+
+INCLUDES = -I../lib.src/include
+
+CFLAGS = $(INCLUDES) -O2 -s -w -mtune=arm9tdmi
+
+ 
+OBJS =  caveheli.o 
+
+all:	$(OBJS)
+	$(CC) -c -o crt0.o crt0.S
+	$(LD) -nostartfiles -s -Wall -Wl,-Map,Test.map  -T lnkscript crt0.o -o $(PRG).elf $(OBJS) $(LIBS)
+	arm-elf-objcopy -O binary $(PRG).elf $(PRG).bin
+	b2fxec -a donskeeto  -t $(PRG) $(PRG).bin $(PRG).fxe
+
+install:
+	mount /dev/sda1 /mnt/iso && cp $(PRG).fxe /mnt/iso/gpmm && umount /mnt/iso
+
+clean:
+	rm -f *.o *~ Test.map $(PRG).bin *.elf
