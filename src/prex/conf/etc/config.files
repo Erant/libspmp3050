@@ -59,7 +59,7 @@ bootfiles	$(SRCDIR)/doc/LICENSE
 bootfiles	$(SRCDIR)/usr/sample/hello/hello
 bootfiles	$(SRCDIR)/usr/sample/gpio/gpio
 bootfiles	$(SRCDIR)/usr/sample/xxd/xxd
-#bootfiles	$(SRCDIR)/usr/sample/lcd/lcd
+bootfiles	$(SRCDIR)/usr/sample/lcd/lcd
 
 #bootfiles	$(SRCDIR)/usr/test/args/args
 #bootfiles	$(SRCDIR)/usr/test/debug/debug
