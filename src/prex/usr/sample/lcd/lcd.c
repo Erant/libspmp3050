@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
 	for(k = 0; k < 0xFFFF; k++){
 		for(i = 0; i < 320; i++){
 			for(j = 0; j < 240; j++){
-				fb[(i * 240) + j] = (i ^ j) * k;
+				fb[(i * 240) + j] = (i ^ j) + k;
 			}
 		}
 		device_ioctl(lcddev, LCDIOC_DRAW, NULL);
