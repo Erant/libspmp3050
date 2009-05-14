@@ -35,7 +35,7 @@
 #include <prex/prex.h>
 #include <prex/ioctl.h>
 #include <sys/ioctl.h>
-#include "logo.h"
+/* #include "logo.h" */
 
 #define RGB(r,g,b)	((((r >> 3) & 0x1F) << 11) | (((g >> 2) & 0x3F) << 5) | ((b >> 3) & 0x1F))
 int main(int argc, char *argv[])
@@ -43,8 +43,8 @@ int main(int argc, char *argv[])
 	device_t lcddev;
 	uint16_t* fb;
 	uint8_t pixel[3];
-	uint8_t* image = header_data;
-	int i, j;
+	/* uint8_t* image = header_data; */
+	int i, j, k;
 	if(device_open("lcd", 0, &lcddev)){
 		printf("Couldn't open LCD device, exiting...\n");
 		return -1;
@@ -59,20 +59,23 @@ int main(int argc, char *argv[])
 	}
 
 	device_ioctl(lcddev, LCDIOC_SET_FB, fb);
-/*
+	device_ioctl(lcddev, LCDIOC_SET_BACKLIGHT, 1);
 	printf("Now drawing alternating patterns to the framebuffer for 60 seconds.\n");
-	for(j = 0; j < 0xFFFF; j++){
-		for(i = 0; i < 320 * 240; i++)
-			fb[i] = j * i;
-
+	for(k = 0; k < 0xFFFF; k++){
+		for(i = 0; i < 320; i++){
+			for(j = 0; j < 240; j++){
+				fb[(i * 240) + j] = (i ^ j) * k;
+			}
+		}
 		device_ioctl(lcddev, LCDIOC_DRAW, NULL);
 		timer_sleep(20, 0);
 	}
-*/
+/*
 	for(j = 0; j < 320 * 240; j++){
 		HEADER_PIXEL(image, pixel);
 		fb[j] = RGB(pixel[0], pixel[1], pixel[2]);
 	}
+*/
 	device_ioctl(lcddev, LCDIOC_DRAW, NULL);
 	device_ioctl(lcddev, LCDIOC_SET_BACKLIGHT, 1);
 	device_close(lcddev);
