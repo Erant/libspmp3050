@@ -138,6 +138,22 @@ void NAND_ReadSector(void* buf, int sec_no){
 	NAND_Init();
 }
 
+void NAND_ReadSectorExtra(void * buf, int sec_no){
+	int i = 0;
+	uint8_t* charbuf = (uint8_t*)buf;
+	NAND_WriteCmd(0x00);
+	NAND_WriteAddr(sec_no << 12 + SECTOR_SIZE);
+	NAND_WriteCmd(0x30);
+	NAND_WaitCmdBusy();
+	NAND_WaitReadBusy();
+
+	for(; i < ECC_SIZE; i++){
+		NAND_StrobeRead();
+		charbuf[i] = NAND_ReadByte();
+	}
+	NAND_Init();
+}
+
 static int nand_init(void){
 	char nand_id[5];
 	/* Create NAND device as an alias of the registered device. */
@@ -170,7 +186,8 @@ static int nand_read(device_t dev, char *buf, size_t *nbyte, int blkno)
 	int i = 0;
 	int sector, sub_sector;
 	/* Temporary addition */
-	blkno += 0x3E5000;
+	blkno += 0x3E5000; /* This is AIMG */
+	/* blkno += 0x30000; /*  Main FAT partition  */
 	/* printf("Reading %d bytes from block %d.\n",todo, blkno); */
 	if(!kbuf)
 		return EFAULT;
