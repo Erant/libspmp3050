@@ -5,8 +5,9 @@ void drawchar(u16 *sprite, int x, int y, u16 color, int chr, u16 *framebuffer);
 void text(int x, int y, u16 color, char *buffer, u16 *framebuffer);
 
 void gp_drawPixel16(int x, int y, u16 color, void* fb){
-	u16* framebuf = (u16*) fb;
-	framebuf[240 * x + y] = color;
+	u16* framebuffer = (u16*) fb;
+	framebuffer[(239-y)+(240*x)] = color;	
+	/* framebuffer[240 * x + y] = color; */
 }
 
 void drawchar(u16 *sprite, int x, int y, u16 color, int chr, u16 *framebuffer)

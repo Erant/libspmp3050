@@ -47,7 +47,7 @@ void gp_Reset(){
 	exit(0);
 }
 
-void gp_drawLine16(){
+void gp_drawLine16(int x0, int y0, int x1, int y1, u16 color, void* fb){
 	
 }
 

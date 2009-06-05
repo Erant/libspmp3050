@@ -57,12 +57,17 @@ void delay_us( int us )
   delay_ms( 1 + us / 1000 ); /* oh no you didn't (fixme) */
 }
 
+/* 
+ * Two flags are set here, some units have the backlight enable GPIO on 0x8,
+ * some have it on 0x20.
+ */
+
 void LCD_SetBacklight(int val){
-	DEV_ENABLE |= 0x8;
+	DEV_ENABLE |= 0x28;
 	if(val)
-		DEV_ENABLE_OUT |= 0x8;
+		DEV_ENABLE_OUT |= 0x28;
 	else
-		DEV_ENABLE_OUT &= ~0x8;
+		DEV_ENABLE_OUT &= ~0x28;
 }
 
 void LCD_AddrWrite(uint16_t val){

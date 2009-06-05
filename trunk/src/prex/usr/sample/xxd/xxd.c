@@ -62,41 +62,45 @@ void printhex(uint8_t *buf, size_t n, uint32_t addr, int linew){
 	}
 }
 
+#define SECTOR_SIZE	512
+#define START	(46208 * 4)
+#define	STEP	1
+#define END		(46210 * 4)
 
-/* #define START	(0x201FDF00 / 512) */
-#define START	0
-/* #define STEP	((1 * 1024 * 512) / 512) */
-#define END		((0x80000000) / 512)
-#define STEP	4
+static char buf[512];
 
 int main(int argc, char *argv[])
 {
-	char buf[512];
 	unsigned int i = START;
 	int j;
-	uint8_t temp;
+	uint8_t temp, temp2;
 	int size = sizeof(buf);
 	device_t nand;
     device_open("nand", O_RDONLY, &nand);
 	
 	for(; i < (END); i += STEP){
 		device_read(nand, buf, &size, i);
-		temp = 0;
-		
-		for(j = 0; j < sizeof(buf); j++)
+		temp = 1;
+		temp2 = 0;
+	
+		for(j = 0; j < sizeof(buf); j++){
 			temp |= buf[j] ^ 0xFF;
-		
-
-
+			temp2 |= buf[j];
+		}
+	
+	
 		if(buf[0x1FE] == 0x55 && buf[0x1FF] == 0xAA)
 			temp = 1;
-
+/*	
+		if(buf[0] == 0x0F && buf[1] == 0x03 && buf[2] == 0xCC)
+			temp = 1;
+*/
 		if(temp){
-			printhex(buf, sizeof(buf), i * sizeof(buf), 16);
+			printhex(buf, sizeof(buf), i * SECTOR_SIZE, 16);
 			/* return 0; */
 		}
 		else
-			printf("Sector %d is empty.\n", i);
+			printf("Block %d is empty.\n", i);
 	}
 	device_close(nand);
 }
