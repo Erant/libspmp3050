@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2008, Tristan Schaap
+ * Copyright (c) 2009, Tristan Schaap
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -32,13 +32,12 @@
  */
 
 #include <driver.h>
+#include <gpio.h>
 #include <sys/ioctl.h>
 #include "../../../sys/arch/arm/spmp/platform.h"
 
 /* Forward functions */
 static int gpio_init(void);
-static int gpio_read(device_t, char *, size_t *, int);
-static int gpio_write(device_t, char *, size_t *, int);
 static int gpio_ioctl(device_t, u_long, void *);
 
 /*
@@ -56,14 +55,15 @@ struct driver gpio_drv = {
 static struct devio gpio_io = {
     /* open */	NULL,
     /* close */	NULL,
-    /* read */	gpio_read,
-    /* write */	gpio_write,
+    /* read */	NULL,
+    /* write */	NULL,
     /* ioctl */	gpio_ioctl,
     /* event */	NULL,
 };
 
 static device_t gpio_dev;	/* device object */
 
+/*
 static int gpio_read(device_t dev, char *buf, size_t *nbyte, int blkno)
 {
 	if(*nbyte >= sizeof(uint64_t)){
@@ -90,28 +90,25 @@ static int gpio_write(device_t dev, char *buf, size_t *nbyte, int blkno)
 	return 0;
 }
 
+*/
+
+uint32_t* gpio_bank[2][GPIO_IOC_NR_BANKS] = {{&GPIO_A_OUT, &GPIO_B_OUT}, {&GPIO_A_DIR, &GPIO_B_DIR}};
+
 static int gpio_ioctl(device_t dev, u_long cmd, void *arg)
 {
+	uint32_t val;
+	gpio_ioc_struct* buf;
 	switch(cmd){
 	case GPIO_IOC_GET:
 		((uint32_t*)arg)[0] = GPIO_A_IN;
 		((uint32_t*)arg)[1] = GPIO_B_IN;
 		return 0;
 	case GPIO_IOC_SET:
-		GPIO_A_OUT |= ((uint32_t*)arg)[0];
-		GPIO_B_OUT |= ((uint32_t*)arg)[1];
-		return 0;
-	case GPIO_IOC_CLEAR:
-		GPIO_A_OUT &= ~((uint32_t*)arg)[0];
-		GPIO_A_OUT &= ~((uint32_t*)arg)[1];
-		return 0;
-	case GPIO_IOC_SET_DIR_OUT:
-		GPIO_A_DIR |= ((uint32_t*)arg)[0];
-		GPIO_B_DIR |= ((uint32_t*)arg)[1];
-		return 0;
-	case GPIO_IOC_SET_DIR_IN:
-		GPIO_A_DIR &= ~((uint32_t*)arg)[0];
-		GPIO_B_DIR &= ~((uint32_t*)arg)[1];
+		buf = ((gpio_ioc_struct*)arg);
+		val = *(gpio_bank[buf->gpio_reg_type][buf->gpio_bank]);
+		val &= ~(buf->mask);
+		val |= buf->val;
+		*(gpio_bank[buf->gpio_reg_type][buf->gpio_bank]) = val;
 		return 0;
 	}
 	return -1;

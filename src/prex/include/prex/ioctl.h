@@ -94,11 +94,15 @@ struct __timeval {
 /*
  * GPIO control codes
  */
-#define GPIO_IOC_GET			_IOR('G', 0, uint64_t)
-#define GPIO_IOC_SET			_IOW('G', 1, uint64_t)
-#define GPIO_IOC_CLEAR			_IOW('G', 2, uint64_t)
-#define GPIO_IOC_SET_DIR_OUT	_IOW('G', 3, uint64_t)
-#define GPIO_IOC_SET_DIR_IN		_IOW('G', 4, uint64_t)
+#define GPIO_IOC_SET			_IOR('G', 0, gpio_ioc_struct)
+#define GPIO_IOC_GET			_IOW('G', 1, uint32_t*)
+
+typedef struct _gpio_ioc_struct{
+	int gpio_bank;
+	int gpio_reg_type;
+	uint32_t mask;
+	uint32_t val;
+}gpio_ioc_struct;
 
 /*
  * LCD control codes

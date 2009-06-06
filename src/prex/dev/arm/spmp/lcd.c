@@ -102,7 +102,7 @@ void LCD_CtrlWrite(int reg, int val){
 }
 
 void LCD_Draw(){
-	GFX_BLIT = 1;
+	GFX_DRAW = 1;
 }
 
 void LCD_Init_0(){
@@ -272,8 +272,8 @@ void LCD_Init(int lcd_type){
 	*((volatile uint32_t*)0x10000008) = 0xFFFFFFFF;
 	*((volatile uint32_t*)0x10000110) = 0xFFFFFFFF;
 
-	lcd_base[0] |= 0x1;
-	LCD_GFX_ENABLE = 1;
+	LCD_ENABLE = 0x1; /* Enable LCD subsystem */
+	LCD_GFX_UPDATE = 1;
 	lcd_base[0x1B9] |= 0x80;
 	
 	LCD_Reset();
@@ -314,7 +314,7 @@ void LCD_SetFramebuffer(void* fb){
 	GFX_FB_END = (((uint32_t)fb) + LCD_WIDTH * LCD_HEIGHT * (LCD_BPP / 8)) >> 1;
 	GFX_FB_HORIZ = LCD_WIDTH;
 	GFX_FB_VERT = LCD_HEIGHT;
-	LCD_GFX_ENABLE |= 2;	/* Possibly 'reinitialize framebuffer' */
+	LCD_GFX_UPDATE |= 2;	/* Possibly 'reinitialize framebuffer' */
 }
 
 void LCD_DoMagic(){
@@ -331,9 +331,10 @@ void LCD_DoMagic(){
 	
 	LCD_SCREEN_HEIGHT = LCD_HEIGHT;
 	LCD_SCREEN_WIDTH = LCD_WIDTH;
-	LCD_SCREEN_UNK = 0x0505;	
+	LCD_SCREEN_T1 = 5;	
+	LCD_SCREEN_T2 = 5;
 
-	LCD_GFX_ENABLE = 1;
+	LCD_GFX_UPDATE = 1;
 	
 	/* init_more_gfx */
 	
