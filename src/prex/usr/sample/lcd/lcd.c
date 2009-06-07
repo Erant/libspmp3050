@@ -35,6 +35,8 @@
 #include <prex/prex.h>
 #include <prex/ioctl.h>
 #include <sys/ioctl.h>
+#include <sys/ioctl.h>
+#include <math.h>
 /* #include "logo.h" */
 
 #define RGB(r,g,b)	((((r >> 3) & 0x1F) << 11) | (((g >> 2) & 0x3F) << 5) | ((b >> 3) & 0x1F))
@@ -61,15 +63,15 @@ int main(int argc, char *argv[])
 	device_ioctl(lcddev, LCDIOC_SET_FB, fb);
 	device_ioctl(lcddev, LCDIOC_SET_BACKLIGHT, 1);
 	printf("Now drawing alternating patterns to the framebuffer for 60 seconds.\n");
-	for(k = 0; k < 0xFFFF; k++){
-		for(i = 0; i < 320; i++){
-			for(j = 0; j < 240; j++){
-				fb[(i * 240) + j] = (i ^ j) + k;
-			}
+	
+	for(i = 0; i < 320; i++)
+	{
+		for(j = 0; j < 240; j++)
+		{
+			fb[(i * 240) + j] = 0xffff;
 		}
-		device_ioctl(lcddev, LCDIOC_DRAW, NULL);
-		timer_sleep(20, 0);
 	}
+	device_ioctl(lcddev, LCDIOC_DRAW, NULL);
 /*
 	for(j = 0; j < 320 * 240; j++){
 		HEADER_PIXEL(image, pixel);
