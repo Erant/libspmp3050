@@ -5,7 +5,7 @@ TYPE=		OBJECT
 OBJS-y= 	../arm/start.o
 
 OBJS-$(CONFIG_SERIAL)+=	        serial.o
-OBJS-$(CONFIG_LCD) += lcd.o
+OBJS-$(CONFIG_LCD) += lcd.o lcd_util.o lcd_init.o
 OBJS-$(CONFIG_GPIO) += gpio.o
 OBJS-$(CONFIG_NAND) += nand.o
 
