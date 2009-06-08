@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
 	spmp_bitmapFont_load(font, "mono12.bfnt");
 
 	/* draw test character */
-	spmp_surface_drawChar(surface, spmp_bitmapFont_findCharacter(font, 'a'), 20, 20);
+	spmp_surface_drawString(surface, "Hello world!", 16, 32, font);
 
 	/* blit */
 	spmp_surface_blit(surface);

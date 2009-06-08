@@ -1,6 +1,8 @@
 #ifndef __surface__
 #define __surface__
 
+#include "bitmap_fonts.h"
+
 typedef struct _spmp_surface spmp_surface;
 
 /* platform specific paint code */
@@ -23,6 +25,8 @@ struct _spmp_surface
 		spmp_surface_blit_FP blit;
 		spmp_surface_drawChar_FP drawChar;
 };
+
+void spmp_surface_drawString(spmp_surface * surface, unsigned char *str, int x, int y, spmp_bitmapFont * font);
 
 /* convenience methods */
 
