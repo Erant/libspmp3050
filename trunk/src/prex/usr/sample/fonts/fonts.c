@@ -236,6 +236,15 @@ int main(int argc, char *argv[])
 	}
 	
 	font_draw_string_16("Fabulous 50's", 8, 180, &font, (unsigned short*)fb, 320, 240);
+
+	if (err=load_font("mono8.bfnt", &font))
+	{
+		printf("Error loading font: %d\n", err);
+		return -1;
+	}
+	
+	font_draw_string_16("This is monospaced 8pt", 8, 200, &font, (unsigned short*)fb, 320, 240);
+	font_draw_string_16("A tiny font for the console maybe?", 8, 208, &font, (unsigned short*)fb, 320, 240);
 	
 	device_ioctl(lcddev, LCDIOC_DRAW, NULL);
 	device_ioctl(lcddev, LCDIOC_SET_BACKLIGHT, 1);
