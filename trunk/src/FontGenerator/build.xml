@@ -1,0 +1,29 @@
+<project name="fopsnor" default="package">
+
+	<!-- compile the sources -->
+	<target name="compile">
+		<mkdir dir="bin"/>
+		<javac
+			srcdir="src"
+			destdir="bin"
+			source="1.5"
+			debug="true"
+			encoding="iso-8859-1"		
+		>
+		</javac>
+	</target>
+
+	<!-- package the tools into a single .jar file -->
+	<target name="package" depends="compile"> 
+		<jar destfile="bitmapfonts.jar"> 
+			<fileset dir="bin"><include name="**/*.class"/></fileset>
+			<manifest><attribute name="Main-Class" value="BitmapFonts"/></manifest>
+		</jar>
+	</target>
+
+	<!-- install into /usr/share/java -->
+	<target name="install" depends="package"> 
+		<copy file="bitmapfonts.jar" todir="/usr/share/java"/>
+	</target>
+
+</project>
