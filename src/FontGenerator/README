@@ -1,0 +1,14 @@
+Bitmap font generator. Needs Java (sun java, please)
+
+If you want to build it from source you'll need ANT (sudo apt-get install ant). Installing means copying the jar file to /usr/share/java.
+
+run:
+	java -jar bitmapfonts.jar [options]
+
+build:
+	ant
+	
+intstall:
+	sudo ant install
+	
+
