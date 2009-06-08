@@ -53,6 +53,7 @@ typedef struct _font_character_entry font_character_entry;
 struct _font_file
 {
 	int num_characters;
+	int font_size;
 	font_character_entry * entries;
 	unsigned char * data;
 };
@@ -81,6 +82,7 @@ int load_font(const char *filename, font_file * font)
 	
 	/* get number of glyphs */
 	font->num_characters = freadU16(file);
+	font->font_size = freadU16(file);
 	unsigned int data_size = freadU32(file);
 
 	printf("%d %d\n", font->num_characters, data_size);
@@ -162,7 +164,7 @@ void font_draw_string_16(unsigned char * str, int x, int y, font_file * font, un
 			x += character_entry->width;
 			x += 1;
 		} else
-			x+=4;
+			x+=font->font_size/4;
 		
 		str++;
 	}
@@ -202,38 +204,38 @@ int main(int argc, char *argv[])
 	}
 	device_ioctl(lcddev, LCDIOC_DRAW, NULL);
 
-	for (i=0; i<320; i++) fb[239-32+i*240] = 31<<11;
-	for (i=0; i<320; i++) fb[239-48+i*240] = 31<<11;
-	for (i=0; i<320; i++) fb[239-80+i*240] = 31<<11;
-	for (i=0; i<320; i++) fb[239-128+i*240] = 31<<11;
+	for (i=0; i<320; i++) fb[239-30+i*240] = 31<<11;
+	for (i=0; i<320; i++) fb[239-50+i*240] = 31<<11;
+	for (i=0; i<320; i++) fb[239-90+i*240] = 31<<11;
+	for (i=0; i<320; i++) fb[239-180+i*240] = 31<<11;
 	
 	int err;
 	font_file font;
 	
-	if (err=load_font("arial_16.bfnt", &font))
+	if (err=load_font("hvdp20.bfnt", &font))
 	{
 		printf("Error loading font: %d\n", err);
 		return -1;
 	}
 	
-	font_draw_string_16("The quick brown fox jumps", 16, 32, &font, (unsigned short*)fb, 320, 240);
-	font_draw_string_16("over the lazy dog", 16, 48, &font, (unsigned short*)fb, 320, 240);
+	font_draw_string_16("The quick brown fox", 8, 30, &font, (unsigned short*)fb, 320, 240);
+	font_draw_string_16("jumps over the lazy dog", 8, 50, &font, (unsigned short*)fb, 320, 240);
 	
-	if (err=load_font("helv_24.bfnt", &font))
+	if (err=load_font("age11_24.bfnt", &font))
 	{
 		printf("Error loading font: %d\n", err);
 		return -1;
 	}
 	
-	font_draw_string_16("Serif 24pt", 16, 80, &font, (unsigned short*)fb, 320, 240);
+	font_draw_string_16("Age 11 handwriting", 8, 90, &font, (unsigned short*)fb, 320, 240);
 	
-	if (err=load_font("arial_32.bfnt", &font))
+	if (err=load_font("fab32.bfnt", &font))
 	{
 		printf("Error loading font: %d\n", err);
 		return -1;
 	}
 	
-	font_draw_string_16("Arial 32pt", 16, 128, &font, (unsigned short*)fb, 320, 240);
+	font_draw_string_16("Fabulous 50's", 8, 180, &font, (unsigned short*)fb, 320, 240);
 	
 	device_ioctl(lcddev, LCDIOC_DRAW, NULL);
 	device_ioctl(lcddev, LCDIOC_SET_BACKLIGHT, 1);
