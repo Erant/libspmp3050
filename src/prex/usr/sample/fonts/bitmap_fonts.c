@@ -84,4 +84,3 @@ spmp_bitmapFontCharacter * spmp_bitmapFont_findCharacter(spmp_bitmapFont * font,
 	/* not found, return null */
 	return NULL;
 }
-
