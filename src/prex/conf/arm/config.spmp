@@ -14,7 +14,10 @@ memory		BOOTIMG_BASE	0x24012000
 #
 # Make options
 #
-makeoptions	CFLAGS+=-mcpu=arm9
+#makeoptions	CFLAGS+=-mcpu=arm926ej-s -mfloat-abi=hard -mfpu=fpa
+# ^ an experiment, uses hardfp which we don't have, so it won't run
+
+makeoptions	ARCHFLAGS+=-march=armv5te 
 
 #
 # Tunable paramters
