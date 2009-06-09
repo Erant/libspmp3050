@@ -69,9 +69,9 @@ DEFS=		-D__$(ARCH)__ -D__$(PLATFORM)__ \
 		-D__ARCH__=$(ARCH) -D__PLATFORM__=$(PLATFORM) \
 		-U$(ARCH) -U$(PLATFORM)
 
-CFLAGS+=	-Os -ansi -pedantic -Wall -Wundef -fno-strict-aliasing \
+CFLAGS+=	-Os -ffast-math -ansi -pedantic -Wall -Wundef -fno-strict-aliasing \
 		-Wstrict-prototypes -Wpointer-arith \
-		$(CONFIG_CFLAGS) $(DEFS)
+		$(CONFIG_CFLAGS) $(DEFS) $(ARCHFLAGS)
 
 ifeq ($(NDEBUG),1)
 CFLAGS+=	-fomit-frame-pointer
@@ -106,11 +106,11 @@ LIBGCC = $(LIBGCC_PATH)libgcc.a
 	$(CC) $(CFLAGS) -c -o $@ $<
 
 %.o: %.s
-	$(AS) -o $@ $<
+	$(AS) $(ARCHFLAGS) -o $@ $<
 
 %.o: %.S
 	$(CPP) $(ASFLAGS) $< $*.tmp
-	$(AS) -o $@ $*.tmp
+	$(AS) $(ARCHFLAGS) -o $@ $*.tmp
 	rm -f $*.tmp
 
 #
