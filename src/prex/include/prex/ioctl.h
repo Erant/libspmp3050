@@ -110,5 +110,6 @@ typedef struct _gpio_ioc_struct{
 #define LCDIOC_SET_FB			_IOW('L', 0, void*)
 #define LCDIOC_DRAW				_IOW('L', 1, int)
 #define	LCDIOC_SET_BACKLIGHT	_IOW('L', 2, int)
+#define	LCDIOC_INIT	_IOW('L', 3, int)
 
 #endif /* !_PREX_IOCTL_H */
