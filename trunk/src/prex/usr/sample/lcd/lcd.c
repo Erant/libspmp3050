@@ -60,18 +60,33 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
-	device_ioctl(lcddev, LCDIOC_SET_FB, fb);
-	device_ioctl(lcddev, LCDIOC_SET_BACKLIGHT, 1);
-	printf("Now drawing alternating patterns to the framebuffer for 60 seconds.\n");
+	printf("drawing a test patern to the framebuffer( yellow/blue diagonal separation )\n");
 	
 	for(i = 0; i < 320; i++)
 	{
 		for(j = 0; j < 240; j++)
 		{
-			fb[(i * 240) + j] = 0xffff;
+          fb[(i * 240) + j] = i<j ? 0x00ff : 0xff00;
 		}
 	}
-	device_ioctl(lcddev, LCDIOC_DRAW, NULL);
+
+    device_ioctl(lcddev, LCDIOC_SET_FB, fb);
+
+    while(1)
+      {
+        int nr=0;
+        printf("enter init number (0 to stop)\n");
+        scanf("%d", &nr);
+        if (nr==0)
+          break;
+        printf("initing number %d\n", nr );
+        device_ioctl(lcddev, LCDIOC_INIT, nr);
+
+        device_ioctl(lcddev, LCDIOC_SET_BACKLIGHT, 1);
+        device_ioctl(lcddev, LCDIOC_DRAW, NULL);
+
+      }
+
 /*
 	for(j = 0; j < 320 * 240; j++){
 		HEADER_PIXEL(image, pixel);
