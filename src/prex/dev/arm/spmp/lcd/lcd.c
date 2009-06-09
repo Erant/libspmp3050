@@ -67,6 +67,10 @@ static int lcd_ioctl(device_t dev, u_long cmd, void *arg)
 			/* printf("Drawing framebuffer.\n"); */
 			LCD_Draw();
 			return 0;
+		case LCDIOC_INIT:
+			/* printf("Drawing framebuffer.\n"); */
+			LCD_Init( ((int)arg) );
+			return 0;
 	}
 	printf("Whoops, wrong ioctl received!\n");
 	return -1;
