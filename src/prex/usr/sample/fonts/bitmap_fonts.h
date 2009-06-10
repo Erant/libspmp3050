@@ -14,7 +14,10 @@ enum
 struct _spmp_bitmapFont
 {
 	int num_characters;
+	int bitmap_type;
 	int font_size;
+	int space_advance;
+	int leading;
 	spmp_bitmapFontCharacter * characters;
 	unsigned char * data;
 };
@@ -23,8 +26,8 @@ struct _spmp_bitmapFontCharacter
 {
 	unsigned char character;
 	unsigned char width, height;
-	signed char horizontal_shift;
-	signed char vertical_shift;
+	signed char advance;
+	signed char ascent;
 	unsigned char * data;
 };
 

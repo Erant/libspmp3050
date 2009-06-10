@@ -5,42 +5,9 @@
 #include "surface.h"
 #include "surface16bpp.h"
 
-/*
-void font_draw_string_16(unsigned char * str, int x, int y, font_file * font, unsigned short * screen, int screen_width, int screen_height)
-{
-
-	char first = 1;
-	unsigned char c;
-	font_character_entry * character_entry;
-
-	while (*str!=0)
-	{
-		character_entry = font_find_character(font, *str);
-		if (character_entry!=NULL)
-		{
-			if (!first) x += character_entry->horizontal_shift;
-			first = 0;
-			font_draw_16(
-				character_entry,
-				x,
-				y - character_entry->height + character_entry->vertical_shift,
-				screen,
-				screen_width,
-				screen_height
-				);
-			x += character_entry->width;
-			x += 1;
-		} else
-			x+=font->font_size/4;
-
-		str++;
-	}
-
-}
-*/
-
 int main(int argc, char *argv[])
 {
+	int x, y;
 	spmp_bitmapFont * font;
 	spmp_surface * surface;
 
@@ -59,12 +26,43 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
+	for (y=0; y<320; y++)
+		for (x=0; x<240; x++)
+			surface->framebuffer.u16[y*240+x] = (15) | (31 << 5) | (15 << 11);
+
 	/* create a new font */
+	int baseline = 40;
+
+	font = spmp_bitmapFont_create();
+	spmp_bitmapFont_load(font, "goudy32.bfnt");
+	spmp_surface_drawString(surface, "Goudy 32pt.", 16, baseline, font);
+	printf("%d\n", font->leading);
+	baseline += font->leading;
+	spmp_bitmapFont_destroy(font);
+
+	font = spmp_bitmapFont_create();
+	spmp_bitmapFont_load(font, "italic24.bfnt");
+	spmp_surface_drawString(surface, "Italic nice 24pt.", 16, baseline, font);
+	baseline += font->leading;
+	spmp_bitmapFont_destroy(font);
+
+	font = spmp_bitmapFont_create();
+	spmp_bitmapFont_load(font, "mono24.bfnt");
+	spmp_surface_drawString(surface, "Monospace 24pt.", 16, baseline, font);
+	baseline += font->leading;
+	spmp_bitmapFont_destroy(font);
+
+	font = spmp_bitmapFont_create();
+	spmp_bitmapFont_load(font, "mono16.bfnt");
+	spmp_surface_drawString(surface, "Monospace 16pt.", 16, baseline, font);
+	baseline += font->leading;
+	spmp_bitmapFont_destroy(font);
+
 	font = spmp_bitmapFont_create();
 	spmp_bitmapFont_load(font, "mono12.bfnt");
-
-	/* draw test character */
-	spmp_surface_drawString(surface, "Hello world!", 16, 32, font);
+	spmp_surface_drawString(surface, "Monospace 12pt.", 16, baseline, font);
+	baseline += font->leading;
+	spmp_bitmapFont_destroy(font);
 
 	/* blit */
 	spmp_surface_blit(surface);

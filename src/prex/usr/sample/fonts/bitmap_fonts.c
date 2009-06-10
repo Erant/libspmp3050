@@ -43,8 +43,13 @@ int spmp_bitmapFont_load(spmp_bitmapFont * font, const char *filename)
 	if (fgetc(file)!='T') return FONT_LOAD_HEADER_FAIL;
 
 	/* get number of glyphs */
+	font->bitmap_type = freadU8(file);
+	font->font_size = freadU8(file);
 	font->num_characters = freadU16(file);
-	font->font_size = freadU16(file);
+
+	font->space_advance = freadU16(file);
+	font->leading = freadU16(file);
+
 	data_size = freadU32(file);
 
 	/* allocate the glyph entry table */
@@ -59,8 +64,8 @@ int spmp_bitmapFont_load(spmp_bitmapFont * font, const char *filename)
 		font->characters[i].character = fgetc(file);
 		font->characters[i].width = fgetc(file);
 		font->characters[i].height = fgetc(file);
-		font->characters[i].horizontal_shift = fgetc(file);
-		font->characters[i].vertical_shift = fgetc(file);
+		font->characters[i].advance = fgetc(file);
+		font->characters[i].ascent = fgetc(file);
 		font->characters[i].data = (unsigned char *)((int)(font->data) + freadU32(file));
 	}
 
