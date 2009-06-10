@@ -16,6 +16,8 @@ int spmp_surface16bpp_init(void)
 	/* turn on backlight */
 	device_ioctl(lcddev, LCDIOC_SET_BACKLIGHT, 1);
 
+
+
 	return SPMP_SURFACE16BPP_INIT_SUCCESS;
 
 }
@@ -26,26 +28,40 @@ int spmp_surface16bpp_close(void)
 }
 
 
-static void spmp_surface16bpp_drawChar(spmp_surface * surface, spmp_bitmapFontCharacter * character, int x, int y)
+static void spmp_surface16bpp_drawChar(spmp_surface * surface, spmp_bitmapFontCharacter * character, int x, int y, unsigned char r, unsigned char g, unsigned char b)
 {
-
+	unsigned char c, dr, dg, db;
+	unsigned short src_pixel;
 	int i, j;
 	int character_width = character->width;
 	int character_height = character->height;
-	unsigned char * character_data = character->data;
+	unsigned char * char_data = character->data;
 
 	int screen_width = surface->width;
 	int screen_height = surface->height;
-	int screen_stride = surface->stride;
-	unsigned short * framebuffer = surface->framebuffer.u16;
+	unsigned short * framebuffer = surface->framebuffer.u16 + surface->stride * y + x;
+
+	unsigned int pos, skip = surface->stride - character_width;
+
+	r >>= 3;
+	g >>= 2;
+	b >>= 3;
 
 	for (i=0; i<character_height; i++)
 	{
 		for (j=0; j<character_width; j++)
 		{
-			char c = (character_data[i*character_width+j]) >> 3;
-			framebuffer[(screen_width-1-x-j)*screen_stride + (screen_height-1-y-i)] = c | (c<<6) | (c<<11);
+			c = *(char_data++);
+			src_pixel = *(framebuffer);
+
+			dr = ((src_pixel & 31)*(256-c) + r*c) >> 8;
+			dg = (((src_pixel>>5) & 63)*(256-c) + g*c) >> 8;
+			db = (((src_pixel>>11) & 31)*(256-c) + b*c) >> 8;
+
+			*(framebuffer) = dr | (dg<<5) | (db<<11);
+			framebuffer++;
 		}
+		framebuffer += skip;
 	}
 }
 
@@ -69,7 +85,7 @@ spmp_surface * spmp_surface16bpp_create(void)
 
 	ret->height = 240;
 	ret->width = 320;
-	ret->stride = 240;
+	ret->stride = 320;
 
 	/* hook implementation */
 	ret->drawChar = spmp_surface16bpp_drawChar;

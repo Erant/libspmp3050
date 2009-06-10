@@ -1,7 +1,7 @@
 #include "stddef.h"
 #include "surface.h"
 
-void spmp_surface_drawString(spmp_surface * surface, unsigned char *str, int x, int y, spmp_bitmapFont * font)
+void spmp_surface_drawString(spmp_surface * surface, unsigned char *str, int x, int y, spmp_bitmapFont * font, unsigned char r, unsigned char g, unsigned char b)
 {
 
 	int pos = 0;
@@ -17,12 +17,12 @@ void spmp_surface_drawString(spmp_surface * surface, unsigned char *str, int x, 
 					surface,
 					character,
 					x + pos,
-					y - character->ascent
+					y - character->ascent,
+					r, g, b
 					);
 
 			pos += character->advance;
 		} else
-			/* hack */
 			pos+=font->space_advance;
 
 		str++;
