@@ -13,19 +13,17 @@ void spmp_surface_drawString(spmp_surface * surface, unsigned char *str, int x, 
 		character = spmp_bitmapFont_findCharacter(font, *str);
 		if (character!=NULL)
 		{
-			if (pos>0) pos += character->horizontal_shift;
 			spmp_surface_drawChar(
 					surface,
 					character,
 					x + pos,
-					y - character->height + character->vertical_shift
+					y - character->ascent
 					);
 
-			pos += character->width;
-			pos += 1;
+			pos += character->advance;
 		} else
 			/* hack */
-			pos+=font->font_size/4;
+			pos+=font->space_advance;
 
 		str++;
 	}
