@@ -2,6 +2,7 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.font.TextLayout;
 import java.awt.image.BufferedImage;
 import java.io.DataOutputStream;
 import java.io.File;
@@ -24,6 +25,19 @@ public class BitmapFontExtractor
 	private Graphics2D g2;
 	private ArrayList<Glyph> glyphs;
 	
+	enum BitmapFormat
+	{
+		GRAYSCALE_4(0),
+		GRAYSCALE_8(1);
+		
+		public int code;
+		
+		private BitmapFormat(int code)
+		{
+			this.code = code;
+		}
+	}
+	
 	public BitmapFontExtractor(Font font, int fontSize)
 	{
 		this.font = font;
@@ -36,8 +50,7 @@ public class BitmapFontExtractor
 		public byte[] data;
 		public char c;
 		public int w, h;
-		public int horizontalShift, verticalShift;
-			
+		public int advance, ascent;			
 		
 	}
 	
@@ -87,9 +100,12 @@ public class BitmapFontExtractor
         
         ret.w = glyphImage.getWidth();
         ret.h = glyphImage.getHeight();
-        ret.horizontalShift = horizontalStart - fontSize;
-        ret.verticalShift = verticalEnd - fontSize;
         ret.c = c;
+        
+        // calculate advance
+        TextLayout textLayout = new TextLayout("" + c, font, g2.getFontRenderContext());
+        ret.advance = (int)textLayout.getAdvance();
+        ret.ascent = (int)(fontSize - verticalStart);
         
         return ret;        
 	}
@@ -106,8 +122,15 @@ public class BitmapFontExtractor
 		out.write((byte)'F');
 		out.write((byte)'N');
 		out.write((byte)'T');
+		out.writeByte(BitmapFormat.GRAYSCALE_8.code);		// TODO: support more formats
+		out.writeByte(fontSize);
 		out.writeShort(glyphs.size());
-		out.writeShort(fontSize);
+
+		TextLayout textLayout = new TextLayout(" ", font, g2.getFontRenderContext());
+		out.writeShort((int)textLayout.getAdvance());
+		textLayout = new TextLayout("ABC", font, g2.getFontRenderContext());
+		out.writeShort((int)(textLayout.getLeading() + textLayout.getBounds().getHeight()));
+		
 		int totalDataSize = 0; 
 		for (Glyph glyph : glyphs)
 			totalDataSize += glyph.data.length;
@@ -120,8 +143,8 @@ public class BitmapFontExtractor
 			out.writeByte((byte)glyph.c);
 			out.writeByte((byte)glyph.w);
 			out.writeByte((byte)glyph.h);
-			out.writeByte((byte)glyph.horizontalShift);
-			out.writeByte((byte)glyph.verticalShift);
+			out.writeByte((byte)glyph.advance);
+			out.writeByte((byte)glyph.ascent);
 			out.writeInt(offset);
 			offset += glyph.data.length;
 		}
@@ -146,7 +169,7 @@ public class BitmapFontExtractor
         g2.setColor(Color.white);
         
         glyphs = new ArrayList<Glyph>();
-        
+
         for (int i=0; i<128; i++)
         	if (font.canDisplay((char)i))
         	{
