@@ -1,0 +1,12 @@
+ant package
+java -jar bitmapfonts.jar -n monospace -s 8 -o mono8.bfnt
+java -jar bitmapfonts.jar -n monospace -s 12 -o mono12.bfnt
+java -jar bitmapfonts.jar -n monospace -s 16 -o mono16.bfnt
+java -jar bitmapfonts.jar -n monospace -s 24 -o mono24.bfnt
+java -jar bitmapfonts.jar -f GoudyBookletter1911.ttf -s 8 -o mono8.bfnt
+java -jar bitmapfonts.jar -f GoudyBookletter1911.ttf -s 12 -o mono12.bfnt
+java -jar bitmapfonts.jar -f GoudyBookletter1911.ttf -s 16 -o mono16.bfnt
+java -jar bitmapfonts.jar -f GoudyBookletter1911.ttf -s 24 -o mono24.bfnt
+java -jar bitmapfonts.jar -n "nice" -s 24 -i -o italic24.bfnt
+java -jar bitmapfonts.jar -f GoudyBookletter1911.ttf -s 32 -o goudy32.bfnt
+cp *.bfnt ../prex/usr/sample/fonts/
