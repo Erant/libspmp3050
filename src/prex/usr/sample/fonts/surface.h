@@ -7,7 +7,7 @@ typedef struct _spmp_surface spmp_surface;
 
 /* platform specific paint code */
 typedef void (*spmp_surface_blit_FP)(spmp_surface * surface);
-typedef void (*spmp_surface_drawChar_FP)(spmp_surface * surface, spmp_bitmapFontCharacter * character, int x, int y);
+typedef void (*spmp_surface_drawChar_FP)(spmp_surface * surface, spmp_bitmapFontCharacter * character, int x, int y, unsigned char r, unsigned char g, unsigned char b);
 
 struct _spmp_surface
 {
@@ -26,7 +26,7 @@ struct _spmp_surface
 		spmp_surface_drawChar_FP drawChar;
 };
 
-void spmp_surface_drawString(spmp_surface * surface, unsigned char *str, int x, int y, spmp_bitmapFont * font);
+void spmp_surface_drawString(spmp_surface * surface, unsigned char *str, int x, int y, spmp_bitmapFont * font, unsigned char r, unsigned char g, unsigned char b);
 
 /* convenience methods */
 
@@ -35,9 +35,9 @@ static void spmp_surface_blit(spmp_surface * surface)
 	surface->blit(surface);
 }
 
-static void spmp_surface_drawChar(spmp_surface * surface, spmp_bitmapFontCharacter * character, int x, int y)
+static void spmp_surface_drawChar(spmp_surface * surface, spmp_bitmapFontCharacter * character, int x, int y, unsigned char r, unsigned char g, unsigned char b)
 {
-	surface->drawChar(surface, character, x, y);
+	surface->drawChar(surface, character, x, y, r, g, b);
 }
 
 #endif
