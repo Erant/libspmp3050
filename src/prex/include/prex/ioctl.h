@@ -112,4 +112,12 @@ typedef struct _gpio_ioc_struct{
 #define	LCDIOC_SET_BACKLIGHT	_IOW('L', 2, int)
 #define	LCDIOC_INIT	_IOW('L', 3, int)
 
+typedef struct _nand_ioc_struct {
+	uint32_t nand_num_blocks;
+	uint32_t nand_pages_per_block;
+	uint32_t nand_bytes_per_page;
+	uint32_t nand_spare_per_page;
+} nand_ioc_struct;
+	
+#define NANDIOC_GET_INFO			_IOR('N',0, nand_ioc_struct)
 #endif /* !_PREX_IOCTL_H */
