@@ -15,11 +15,11 @@ static int nand_write(device_t, char *, size_t *, int);
 static int nand_ioctl(device_t, u_long, void *);
 
 #define offset_t uint32_t
-#define PAGE_SIZE		2048
-#define BLOCK_SIZE		(128 * PAGE_SIZE)
+#define NAND_PAGE_SIZE		2048
+#define BLOCK_SIZE		(128 * NAND_PAGE_SIZE)
 #define ECC_SIZE		64
 
-static uint8_t sector_buf[PAGE_SIZE];
+static uint8_t sector_buf[NAND_PAGE_SIZE];
 static uint16_t translate[0x1F20];
 
 /*
@@ -45,7 +45,7 @@ static struct devio nand_io = {
 
 static device_t nand_dev[16];	/* device objects */
 
-void NAND_Init(){
+void NAND_Init(void) {
 	NAND_ENABLE = 1;
 	NAND_CTRL_HI |= 0x3;
 	NAND_CTRL_HI &= ~(NAND_CTRL_CLE | NAND_CTRL_ALE);
@@ -54,7 +54,7 @@ void NAND_Init(){
 	NAND_CTRL_HI &= ~0x1;
 }
 
-void NAND_StrobeRead(){
+void NAND_StrobeRead(void) {
 	volatile uint8_t* nand_base = ((volatile uint8_t*)NAND_BASE);
 	uint8_t temp = NAND_CTRL_LO;
 	NAND_CTRL_LO = temp | NAND_CTRL_RE;
@@ -62,19 +62,18 @@ void NAND_StrobeRead(){
 	NAND_CTRL_LO = temp;
 }
 
-uint8_t NAND_ReadByte()
-{	
+uint8_t NAND_ReadByte(void) {	
 	return NAND_DATA;
 }
 
-void NAND_WriteCmd(uint8_t cmd){
+void NAND_WriteCmd(uint8_t cmd) {
 	NAND_CTRL_HI = (NAND_CTRL_HI & ~NAND_CTRL_ALE) | NAND_CTRL_CLE;
 	NAND_DATA = cmd;
 	NAND_CTRL_HI = (NAND_CTRL_HI & ~NAND_CTRL_ALE) | NAND_CTRL_CLE;
 	NAND_CTRL_HI &= ~NAND_CTRL_CLE;
 }
 
-void NAND_WriteAddr(uint32_t page_no, uint32_t col_no){
+void NAND_WriteAddr(uint32_t page_no, uint32_t col_no) {
 	NAND_CTRL_HI = (NAND_CTRL_HI & ~NAND_CTRL_CLE) | NAND_CTRL_ALE;
 	NAND_DATA = col_no & 0xFF;
 	NAND_DATA = (col_no >> 8) & 0x0F;
@@ -86,7 +85,7 @@ void NAND_WriteAddr(uint32_t page_no, uint32_t col_no){
 }
 
 /* Possibly broken, should check in disasm */
-int NAND_WaitReadBusy(){
+int NAND_WaitReadBusy(void) {
 	int i = 0;
 	for(; i < 3000; i++){
 		if(!(NAND_STATUS & NAND_STATUS_READ_BUSY))
@@ -95,7 +94,7 @@ int NAND_WaitReadBusy(){
 	return -1;
 }
 
-int NAND_WaitCmdBusy(){
+int NAND_WaitCmdBusy(void) {
 	int i = 0;
 	for(; i < 50000; i++){
 		if((NAND_STATUS2 & NAND_STATUS_CMD_READY))
@@ -105,7 +104,7 @@ int NAND_WaitCmdBusy(){
 }
 
 /* Fills the buf with 5 chars worth of nand_id */
-int NAND_ReadID(char* buf){
+int NAND_ReadID(char* buf) {
 	int i = 0, ret = 0;
 	NAND_WriteCmd(0x90);
 	NAND_WriteAddr(0, 0);
@@ -124,7 +123,7 @@ int NAND_ReadID(char* buf){
 	return -1;
 }
 
-void NAND_ReadSector(void* buf, int sec_no){
+void NAND_ReadSector(void* buf, int sec_no) {
 	int i = 0;
 	uint8_t* charbuf = (uint8_t*)buf;
 	NAND_WriteCmd(0x00);
@@ -133,7 +132,7 @@ void NAND_ReadSector(void* buf, int sec_no){
 	NAND_WaitCmdBusy();
 	NAND_WaitReadBusy();
 
-	for(; i < PAGE_SIZE; i++){
+	for(; i < PAGE_SIZE; i++) {
 		NAND_StrobeRead();
 		/* NAND_WaitReadBusy(); */
 		charbuf[i] = NAND_ReadByte();
@@ -141,7 +140,7 @@ void NAND_ReadSector(void* buf, int sec_no){
 	NAND_Init();
 }
 
-void NAND_ReadSectorSpare(void * buf, int sec_no){
+void NAND_ReadSectorSpare(void * buf, int sec_no) {
 	int i = 0;
 	uint8_t* charbuf = (uint8_t*)buf;
 	NAND_WriteCmd(0x00);
@@ -158,7 +157,7 @@ void NAND_ReadSectorSpare(void * buf, int sec_no){
 }
 
 /* Returns the sector containing the blockmap */
-int NAND_FillBlockmap(){
+int NAND_FillBlockmap(void) {
 	int i = 0, j;
 	uint16_t sec;
 	int* buf = (int*)sector_buf;
@@ -178,9 +177,8 @@ int NAND_FillBlockmap(){
 	return 0;
 }
 
-static int nand_init(void){
+static int nand_init(void) {
 	char nand_id[5];
-	int ret = 0;
 	int blockmap;
 	/* Create NAND device as an alias of the registered device. */
 	nand_dev[0] = device_create(&nand_io, "nand", DF_BLK);
@@ -193,7 +191,7 @@ static int nand_init(void){
 	
 	NAND_Init();
 
-	if(!NAND_ReadID(nand_id)){
+	if(!NAND_ReadID(nand_id)) {
 		printf("NAND Chip found, id: %02X %02X %02X %02X %02X\n",
 			nand_id[0],
 			nand_id[1],
@@ -213,10 +211,8 @@ static int nand_init(void){
 }
 
 /* Horribly non-optimized, but it's late right now... */
-static int nand_read(device_t dev, char *buf, size_t *nbyte, int blkno)
-{
+static int nand_read(device_t dev, char *buf, size_t *nbyte, int blkno) {
 	uint8_t* kbuf = kmem_map(buf, *nbyte);
-	static int cur_blk = 0;
 	size_t todo = *nbyte;
 	int i = 0;
 	int sector, sub_sector, block;
@@ -259,27 +255,23 @@ static int nand_read(device_t dev, char *buf, size_t *nbyte, int blkno)
 	return 0;
 }
 
-static int nand_write(device_t dev, char *buf, size_t *nbyte, int blkno)
-{
+static int nand_write(device_t dev, char *buf, size_t *nbyte, int blkno) {
 	return *nbyte;
 }
 
-static int nand_ioctl(device_t dev, u_long cmd, void *arg)
-{
+static int nand_ioctl(device_t dev, u_long cmd, void *arg) {
 	switch(cmd){
 	}
 	printf("Whoops, wrong ioctl received!\n");
 	return -1;
 }
 
-static int nand_open(device_t dev, int mode)
-{
+static int nand_open(device_t dev, int mode) {
 	printf("NAND opened.\n");
 	return 0;
 }
 
-static int nand_close(device_t dev)
-{
+static int nand_close(device_t dev) {
 	return 0;
 }
 
