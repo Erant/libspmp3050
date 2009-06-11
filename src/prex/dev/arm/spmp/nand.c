@@ -14,13 +14,14 @@ static int nand_read(device_t, char *, size_t *, int);
 static int nand_write(device_t, char *, size_t *, int);
 static int nand_ioctl(device_t, u_long, void *);
 
-#define offset_t uint32_t
-#define NAND_PAGE_SIZE		2048
-#define BLOCK_SIZE		(128 * NAND_PAGE_SIZE)
-#define ECC_SIZE		64
+#define MAX_PAGE_SIZE		8192
 
-static uint8_t sector_buf[NAND_PAGE_SIZE];
+static uint8_t page_buf[MAX_PAGE_SIZE];
 static uint16_t translate[0x1F20];
+static uint32_t nand_num_blocks = 0;
+static uint32_t nand_pages_per_block = 0;
+static uint32_t nand_bytes_per_page = 0;
+static uint32_t nand_spare_per_page = 0;
 
 /*
  * Driver structure
@@ -123,16 +124,16 @@ int NAND_ReadID(char* buf) {
 	return -1;
 }
 
-void NAND_ReadSector(void* buf, int sec_no) {
+void NAND_ReadPage(void* buf, int page_no) {
 	int i = 0;
 	uint8_t* charbuf = (uint8_t*)buf;
 	NAND_WriteCmd(0x00);
-	NAND_WriteAddr(sec_no, 0);
+	NAND_WriteAddr(page_no, 0);
 	NAND_WriteCmd(0x30);
 	NAND_WaitCmdBusy();
 	NAND_WaitReadBusy();
 
-	for(; i < PAGE_SIZE; i++) {
+	for(; i < nand_bytes_per_page; i++) {
 		NAND_StrobeRead();
 		/* NAND_WaitReadBusy(); */
 		charbuf[i] = NAND_ReadByte();
@@ -140,36 +141,36 @@ void NAND_ReadSector(void* buf, int sec_no) {
 	NAND_Init();
 }
 
-void NAND_ReadSectorSpare(void * buf, int sec_no) {
+void NAND_ReadPageSpare(void * buf, int page_no) {
 	int i = 0;
 	uint8_t* charbuf = (uint8_t*)buf;
 	NAND_WriteCmd(0x00);
-	NAND_WriteAddr(sec_no, 0x800);
+	NAND_WriteAddr(page_no, 0x800);
 	NAND_WriteCmd(0x30);
 	NAND_WaitCmdBusy();
 	NAND_WaitReadBusy();
 
-	for(; i < ECC_SIZE; i++){
+	for(; i < nand_spare_per_page; i++){
 		NAND_StrobeRead();
 		charbuf[i] = NAND_ReadByte();
 	}
 	NAND_Init();
 }
 
-/* Returns the sector containing the blockmap */
+/* Returns the page containing the blockmap */
 int NAND_FillBlockmap(void) {
 	int i = 0, j;
-	uint16_t sec;
-	int* buf = (int*)sector_buf;
+	uint16_t page;
+	int* buf = (int*)page_buf;
 	for(; i < 0x1F20; i++){
-		for(j = 0; j < (BLOCK_SIZE / NAND_PAGE_SIZE); j++){
-			NAND_ReadSectorSpare(sector_buf, i * (BLOCK_SIZE / NAND_PAGE_SIZE) + j);
-			if(sector_buf[0x5] != 0xFF){
-				sec = (((int)sector_buf[0x6]) << 8) | sector_buf[0x7];
-				sec &= 0x3FF;
-				translate[sec] = i;
+		for(j = 0; j < nand_pages_per_block; j++){
+			NAND_ReadPageSpare(page_buf, i * nand_pages_per_block + j);
+			if(page_buf[0x5] != 0xFF){
+				page = (((int)page_buf[0x6]) << 8) | page_buf[0x7];
+				page &= 0x3FF;
+				translate[page] = i;
 				printf("buf: %08X %08X %08X %08X\n",buf[0],buf[1],buf[2],buf[3]);
-				printf("Added translation from %04X to %04X\n", sec, i);
+				printf("Added translation from %04X to %04X\n", page, i);
 				break;
 			}
 		}
@@ -191,21 +192,45 @@ static int nand_init(void) {
 	
 	NAND_Init();
 
-	if(!NAND_ReadID(nand_id)) {
-		printf("NAND Chip found, id: %02X %02X %02X %02X %02X\n",
-			nand_id[0],
-			nand_id[1],
-			nand_id[2],
-			nand_id[3],
-			nand_id[4]);
-	}
-	else
-	{
+	if (NAND_ReadID(nand_id)) {
 		printf("No NAND chip found.\n");
 		return -1;
+	}		
+
+	printf("NAND Chip found, id: %02X %02X %02X %02X %02X\n",
+			nand_id[0], nand_id[1],	nand_id[2],	nand_id[3],	nand_id[4]);
+
+	uint32_t page_size = 1024 << (nand_id[3] & 3);
+	uint32_t block_size = 65536 << ((nand_id[3] & 0x30) >> 4);
+	uint32_t spare_size = page_size * ((nand_id[3] & 4) ? 16:8) / 512;
+	uint32_t word_width = (nand_id[3] & 0x40) ? 16:8;
+	uint32_t num_planes = 1 << ((nand_id[4] & 0xC) >> 2);
+	uint32_t plane_size = 64 << ((nand_id[4] & 0x70) >> 4); /* in megabits */
+	uint32_t num_blocks = num_planes * plane_size * (1048576 / 8) / block_size;
+	switch (nand_id[0]) {
+		case 0xEC: printf("Vendor: Samsung\t"); break;
+		case 0xAD: printf("Vendor: Hynix\t"); break;
+		default:   printf("Vendor: Unknown\t"); break;
 	}
-	printf("Creating blockmap...\n");
-	blockmap = NAND_FillBlockmap();
+	
+	printf("Capacity: %u plane%s x %u MB/plane = %u MB\n", num_planes, num_planes>1?"s":"",
+		plane_size/8, num_planes * plane_size/8);
+	
+	printf("Geometry: (%u + %u) bytes/page, %u pages/block, %u blocks\n",
+		page_size, spare_size, block_size / page_size, num_blocks);
+	
+	nand_num_blocks = num_blocks;
+	nand_pages_per_block = block_size / page_size;
+	nand_bytes_per_page = page_size;
+	nand_spare_per_page = spare_size;
+	
+/*	printf("Capabilities: CachePgm: %s\tInterleave: %s\tSimulPages: %d\t%d levels/cell\tChipNo: %d\n",
+		(nand_id[2]&0x80)?"Yes":"No", (nand_id[2]&0x40)?"Yes":"No", 1 << ((nand_id[2]&0x30) >> 4),
+		2 << ((nand_id[2]&0x0C) >> 2), 1 << (nand_id[2]&3)); */
+
+
+/*	printf("Creating blockmap...\n");
+	blockmap = NAND_FillBlockmap(); */
 	/* NAND_ReadSector(translate, 2); */
 	return 0;
 }
@@ -226,8 +251,9 @@ static int nand_read(device_t dev, char *buf, size_t *nbyte, int blkno) {
 	
 	if(dev == nand_dev[1]){	/* Firmware device, use blockmap */
 		/* blkno += 7168; */
-		block = translate[(blkno * 512) / BLOCK_SIZE];
-		blkno = (block * BLOCK_SIZE + (blkno * 512) % BLOCK_SIZE) / 512;
+		block = translate[(blkno * 512) / (nand_pages_per_block * nand_bytes_per_page)];
+		blkno = (block * (nand_pages_per_block * nand_bytes_per_page) + 
+			(blkno * 512) % (nand_pages_per_block * nand_bytes_per_page)) / 512;
 		printf("Reading from 0x%08X\n", blkno * 512);
 	}
 	
@@ -238,16 +264,16 @@ static int nand_read(device_t dev, char *buf, size_t *nbyte, int blkno) {
 	while(todo > 0){
 		sector = blkno / 4;
 		sub_sector = blkno % 4;
-		NAND_ReadSector(sector_buf, sector);
-		if(todo > NAND_PAGE_SIZE){
-			memcpy(kbuf, sector_buf, NAND_PAGE_SIZE);
-			todo -= NAND_PAGE_SIZE;
+		NAND_ReadPage(page_buf, sector);
+		if(todo > nand_bytes_per_page) {
+			memcpy(kbuf, page_buf, nand_bytes_per_page);
+			todo -= nand_bytes_per_page;
 			blkno += 4;
-			kbuf += NAND_PAGE_SIZE;
+			kbuf += nand_bytes_per_page;
 		}
 		else
 		{
-			memcpy(kbuf, sector_buf + (512 * sub_sector), todo);
+			memcpy(kbuf, page_buf + (512 * sub_sector), todo);
 			todo = 0;
 		}
 		blkno++;
