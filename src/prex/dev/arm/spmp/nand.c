@@ -162,8 +162,8 @@ int NAND_FillBlockmap(void) {
 	uint16_t sec;
 	int* buf = (int*)sector_buf;
 	for(; i < 0x1F20; i++){
-		for(j = 0; j < (BLOCK_SIZE / PAGE_SIZE); j++){
-			NAND_ReadSectorSpare(sector_buf, i * (BLOCK_SIZE / PAGE_SIZE) + j);
+		for(j = 0; j < (BLOCK_SIZE / NAND_PAGE_SIZE); j++){
+			NAND_ReadSectorSpare(sector_buf, i * (BLOCK_SIZE / NAND_PAGE_SIZE) + j);
 			if(sector_buf[0x5] != 0xFF){
 				sec = (((int)sector_buf[0x6]) << 8) | sector_buf[0x7];
 				sec &= 0x3FF;
@@ -239,11 +239,11 @@ static int nand_read(device_t dev, char *buf, size_t *nbyte, int blkno) {
 		sector = blkno / 4;
 		sub_sector = blkno % 4;
 		NAND_ReadSector(sector_buf, sector);
-		if(todo > PAGE_SIZE){
-			memcpy(kbuf, sector_buf, PAGE_SIZE);
-			todo -= PAGE_SIZE;
+		if(todo > NAND_PAGE_SIZE){
+			memcpy(kbuf, sector_buf, NAND_PAGE_SIZE);
+			todo -= NAND_PAGE_SIZE;
 			blkno += 4;
-			kbuf += PAGE_SIZE;
+			kbuf += NAND_PAGE_SIZE;
 		}
 		else
 		{
