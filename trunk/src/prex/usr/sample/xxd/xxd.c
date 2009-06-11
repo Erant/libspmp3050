@@ -33,6 +33,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <prex/prex.h>
+#include <sys/ioctl.h>
 
 void printhex(uint8_t *buf, size_t n, uint32_t addr, int linew){
 	size_t pos,i, l, j;
@@ -62,12 +63,13 @@ void printhex(uint8_t *buf, size_t n, uint32_t addr, int linew){
 	}
 }
 
-#define SECTOR_SIZE	512
+#define SECTOR_SIZE	2048
 #define START	(46208 * 4)
 #define	STEP	1
 #define END		(46210 * 4)
 
-static char buf[512];
+static char buf[SECTOR_SIZE];
+nand_ioc_struct nand_info;
 
 int main(int argc, char *argv[])
 {
@@ -77,6 +79,16 @@ int main(int argc, char *argv[])
 	int size = sizeof(buf);
 	device_t nand;
     device_open("nand", O_RDONLY, &nand);
+	
+	printf("argc = %d arg0='%s' arg1='%s'\n", argc, argv[0], argv[1]);
+	if (argc > 1) {
+		i = strtoul(argv[1], NULL, 0);
+		printf("start page = %u\n", i);
+	}
+	
+	device_ioctl(nand, NANDIOC_GET_INFO, &nand_info);
+	printf("NAND: nand_num_blocks=%u nand_pages_per_block=%u nand_bytes_per_page=%u nand_spare_per_page=%u\n",
+		nand_info.nand_num_blocks, nand_info.nand_pages_per_block, nand_info.nand_bytes_per_page, nand_info.nand_spare_per_page);
 	
 	for(; i < (END); i += STEP){
 		device_read(nand, buf, &size, i);

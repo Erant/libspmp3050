@@ -18,10 +18,8 @@ static int nand_ioctl(device_t, u_long, void *);
 
 static uint8_t page_buf[MAX_PAGE_SIZE];
 static uint16_t translate[0x1F20];
-static uint32_t nand_num_blocks = 0;
-static uint32_t nand_pages_per_block = 0;
-static uint32_t nand_bytes_per_page = 0;
-static uint32_t nand_spare_per_page = 0;
+
+nand_ioc_struct nand_info = {0,0,0,0};
 
 /*
  * Driver structure
@@ -133,7 +131,7 @@ void NAND_ReadPage(void* buf, int page_no) {
 	NAND_WaitCmdBusy();
 	NAND_WaitReadBusy();
 
-	for(; i < nand_bytes_per_page; i++) {
+	for(; i < nand_info.nand_bytes_per_page; i++) {
 		NAND_StrobeRead();
 		/* NAND_WaitReadBusy(); */
 		charbuf[i] = NAND_ReadByte();
@@ -150,7 +148,7 @@ void NAND_ReadPageSpare(void * buf, int page_no) {
 	NAND_WaitCmdBusy();
 	NAND_WaitReadBusy();
 
-	for(; i < nand_spare_per_page; i++){
+	for(; i < nand_info.nand_spare_per_page; i++){
 		NAND_StrobeRead();
 		charbuf[i] = NAND_ReadByte();
 	}
@@ -163,8 +161,8 @@ int NAND_FillBlockmap(void) {
 	uint16_t page;
 	int* buf = (int*)page_buf;
 	for(; i < 0x1F20; i++){
-		for(j = 0; j < nand_pages_per_block; j++){
-			NAND_ReadPageSpare(page_buf, i * nand_pages_per_block + j);
+		for(j = 0; j < nand_info.nand_pages_per_block; j++){
+			NAND_ReadPageSpare(page_buf, i * nand_info.nand_pages_per_block + j);
 			if(page_buf[0x5] != 0xFF){
 				page = (((int)page_buf[0x6]) << 8) | page_buf[0x7];
 				page &= 0x3FF;
@@ -219,10 +217,10 @@ static int nand_init(void) {
 	printf("Geometry: (%u + %u) bytes/page, %u pages/block, %u blocks\n",
 		page_size, spare_size, block_size / page_size, num_blocks);
 	
-	nand_num_blocks = num_blocks;
-	nand_pages_per_block = block_size / page_size;
-	nand_bytes_per_page = page_size;
-	nand_spare_per_page = spare_size;
+	nand_info.nand_num_blocks = num_blocks;
+	nand_info.nand_pages_per_block = block_size / page_size;
+	nand_info.nand_bytes_per_page = page_size;
+	nand_info.nand_spare_per_page = spare_size;
 	
 /*	printf("Capabilities: CachePgm: %s\tInterleave: %s\tSimulPages: %d\t%d levels/cell\tChipNo: %d\n",
 		(nand_id[2]&0x80)?"Yes":"No", (nand_id[2]&0x40)?"Yes":"No", 1 << ((nand_id[2]&0x30) >> 4),
@@ -251,9 +249,9 @@ static int nand_read(device_t dev, char *buf, size_t *nbyte, int blkno) {
 	
 	if(dev == nand_dev[1]){	/* Firmware device, use blockmap */
 		/* blkno += 7168; */
-		block = translate[(blkno * 512) / (nand_pages_per_block * nand_bytes_per_page)];
-		blkno = (block * (nand_pages_per_block * nand_bytes_per_page) + 
-			(blkno * 512) % (nand_pages_per_block * nand_bytes_per_page)) / 512;
+		block = translate[(blkno * 512) / (nand_info.nand_pages_per_block * nand_info.nand_bytes_per_page)];
+		blkno = (block * (nand_info.nand_pages_per_block * nand_info.nand_bytes_per_page) + 
+			(blkno * 512) % (nand_info.nand_pages_per_block * nand_info.nand_bytes_per_page)) / 512;
 		printf("Reading from 0x%08X\n", blkno * 512);
 	}
 	
@@ -265,11 +263,11 @@ static int nand_read(device_t dev, char *buf, size_t *nbyte, int blkno) {
 		sector = blkno / 4;
 		sub_sector = blkno % 4;
 		NAND_ReadPage(page_buf, sector);
-		if(todo > nand_bytes_per_page) {
-			memcpy(kbuf, page_buf, nand_bytes_per_page);
-			todo -= nand_bytes_per_page;
+		if(todo > nand_info.nand_bytes_per_page) {
+			memcpy(kbuf, page_buf, nand_info.nand_bytes_per_page);
+			todo -= nand_info.nand_bytes_per_page;
 			blkno += 4;
-			kbuf += nand_bytes_per_page;
+			kbuf += nand_info.nand_bytes_per_page;
 		}
 		else
 		{
@@ -286,7 +284,12 @@ static int nand_write(device_t dev, char *buf, size_t *nbyte, int blkno) {
 }
 
 static int nand_ioctl(device_t dev, u_long cmd, void *arg) {
-	switch(cmd){
+	switch(cmd) {
+		case NANDIOC_GET_INFO:
+                if (umem_copyout(&nand_info, arg, sizeof(nand_info)))
+                        return EFAULT;
+                break;
+		
 	}
 	printf("Whoops, wrong ioctl received!\n");
 	return -1;
