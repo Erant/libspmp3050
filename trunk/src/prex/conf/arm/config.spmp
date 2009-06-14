@@ -55,7 +55,7 @@ options 	SERIAL		# Serial console
 options		LCD		# LCD device
 options		GPIO		# GPIO device
 options		BUTTON		# Button device
-#options		NAND		# NAND device
+options		NAND		# NAND device
 
 #
 # Power management

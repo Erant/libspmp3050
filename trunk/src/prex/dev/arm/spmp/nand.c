@@ -197,6 +197,7 @@ void NAND_ReadRsvBlk(void) {
 int NAND_FillBlockmap(void) {
 	int i = 0, j;
 	uint16_t page;
+	uint16_t min_page = 0xFFFF;
 	int* buf = (int*)page_buf;
 	for(; i < nand_info.nand_num_blocks; i++) {
 		NAND_ReadPageSpare(page_buf, i * nand_info.nand_pages_per_block);
@@ -207,6 +208,8 @@ int NAND_FillBlockmap(void) {
 				printf("spare@%04X: %02X %02X %02X %02X\n",
 					i, page_buf[0],page_buf[1],page_buf[2],page_buf[3]);
 				printf("Added translation from %04X to %04X\n", page, i);
+				if(page < min_page)
+					min_page = page;
 /*				break; */
 			}
 /*			NAND_ReadHead(page_buf, i * nand_info.nand_pages_per_block + j);
@@ -215,12 +218,15 @@ int NAND_FillBlockmap(void) {
 				return 0;
 			} */
 		}
+	printf("First page is: %d, mapped to: %d\n",min_page, translate[min_page]);
 	return 0;
 }
 
 static int nand_init(void) {
 	char nand_id[5];
 	int blockmap;
+	int i = 0;
+
 	/* Create NAND device as an alias of the registered device. */
 	nand_dev[0] = device_create(&nand_io, "nand", DF_BLK);
 	if (nand_dev[0] == DEVICE_NULL)
@@ -270,6 +276,10 @@ static int nand_init(void) {
 
 		NAND_ReadRsvBlk();
 	printf("Creating blockmap...\n");
+
+	/* Filling blockmap with 0xFFFF */
+	memset(translate, 0xFF, sizeof(translate));
+	
 	blockmap = NAND_FillBlockmap();
 	/* NAND_ReadSector(translate, 2); */
 	return 0;
@@ -281,6 +291,7 @@ static int nand_read(device_t dev, char *buf, size_t *nbyte, int blkno) {
 	size_t todo = *nbyte;
 	int i = 0;
 	int sector, sub_sector, block;
+	int nand_block;
 	/* Temporary addition */
 	/* blkno += 0x3E5000; This is AIMG */
 	/* blkno += 0x30000;  Main FAT partition  */
@@ -291,7 +302,15 @@ static int nand_read(device_t dev, char *buf, size_t *nbyte, int blkno) {
 	
 	if(dev == nand_dev[1]){	/* Firmware device, use blockmap */
 		/* blkno += 7168; */
-		block = translate[(blkno * 512) / (nand_info.nand_pages_per_block * nand_info.nand_bytes_per_page)];
+		nand_block = (blkno * 512) / (nand_info.nand_pages_per_block * nand_info.nand_bytes_per_page);
+		block = translate[nand_block];
+		printf("Reading from NAND block %d\n", nand_block);
+		if(block == 0xFFFF){
+			printf("No mapping found!\n");
+			*nbyte = 0;
+			return -1;
+		}
+			
 		blkno = (block * (nand_info.nand_pages_per_block * nand_info.nand_bytes_per_page) + 
 			(blkno * 512) % (nand_info.nand_pages_per_block * nand_info.nand_bytes_per_page)) / 512;
 		printf("Reading from 0x%08X\n", blkno * 512);
