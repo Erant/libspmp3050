@@ -61,8 +61,10 @@ int main(int argc, char *argv[])
 	device_t but_dev;
 	button but_struct;
 	uint32_t raw, prev_raw = 0;
+	u_long start, end;
 	int raw_size = sizeof(raw);
-	int i = 0;
+	int i = 0, val;
+	volatile int j;
 	
 	if(device_open("buttons", 0, &but_dev)){
 		printf("Couldn't open button device, exiting...\n");
@@ -85,14 +87,35 @@ int main(int argc, char *argv[])
 		}while(raw);
 	}
 
+	printf("Buttons mapped. Press UP and DOWN to set the CPU multiplier.\n");
+	printf("Press OK to benchmark.\n");
+
 	while(1){
 		device_read(but_dev, &raw, &raw_size, 0);
 		if(raw != prev_raw){
 			printf("Buttons pressed: %s", raw ? "" : "none.");
+			val = 0;
 			for(i = 0; i < MAX_BUTTONS; i++){
 				if(raw & button_map[i])
 					printf("%s ", buttons[i]);
 			}
+
+			if(raw & BUT_UP)
+				val = 1;
+			if(raw & BUT_DOWN)
+				val = -1;
+			if(raw & BUT_OK){
+				sys_time(&start);
+				for(j = 0; j < 100000; j++);
+				sys_time(&end);
+				printf("\nTook %d ticks", end - start);
+			}
+
+			*((volatile uint8_t*)0x10000123) += val;
+
+			if(val)
+				printf("\nMultiplier now at %d",*((volatile uint8_t*)0x10000123));
+
 			printf("\n");
 		}
 		prev_raw = raw;
