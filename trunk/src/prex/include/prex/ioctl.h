@@ -134,6 +134,10 @@ typedef struct{
 #define	LCDIOC_SET_BACKLIGHT	_IOW('L', 2, int)
 #define	LCDIOC_INIT	_IOW('L', 3, int)
 
+/*
+ * NAND control codes
+ */
+
 typedef struct _nand_ioc_struct {
 	uint32_t nand_num_blocks;
 	uint32_t nand_pages_per_block;
