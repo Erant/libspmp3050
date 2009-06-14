@@ -54,6 +54,7 @@ options 	ZERO		# Zero device
 options 	SERIAL		# Serial console
 options		LCD		# LCD device
 options		GPIO		# GPIO device
+options		BUTTON		# Button device
 #options		NAND		# NAND device
 
 #
