@@ -68,6 +68,8 @@ typedef unsigned long uint32_t;
 #define GPIO_A_DIR				(*(volatile uint32_t*)(GPIO_A + 0x4))
 #define GPIO_A_OUT				(*(volatile uint32_t*)(GPIO_A + 0x8))
 #define GPIO_A_IN				(*(volatile uint32_t*)(GPIO_A + 0xC))
+#define GPIO_A_PULL_ENABLE		(*(volatile uint32_t*)(IO_BASE + 0x1CC))
+#define GPIO_A_PULL_SELECT		(*(volatile uint32_t*)(IO_BASE + 0x1A8))
 
 #define GPIO_B					(GPIO_BASE + 0xE0)
 #define GPIO_B_DIR				(*(volatile uint32_t*)(GPIO_B + 0x4))

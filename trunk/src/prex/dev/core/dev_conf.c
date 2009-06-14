@@ -46,6 +46,7 @@ extern struct driver serial_drv;
 extern struct driver lcd_drv;
 extern struct driver gpio_drv;
 extern struct driver nand_drv;
+extern struct driver but_drv;
 
 /*
  * Driver table
@@ -99,6 +100,9 @@ struct driver *driver_table[] = {
 #endif
 #ifdef CONFIG_NAND
 	&nand_drv,
+#endif
+#ifdef CONFIG_BUTTON
+	&but_drv,
 #endif
 	NULL
 };

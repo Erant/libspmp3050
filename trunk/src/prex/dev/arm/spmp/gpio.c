@@ -32,12 +32,12 @@
  */
 
 #include <driver.h>
-#include <gpio.h>
 #include <sys/ioctl.h>
 #include "../../../sys/arch/arm/spmp/platform.h"
 
 /* Forward functions */
 static int gpio_init(void);
+static int gpio_read(device_t dev, char *buf, size_t *nbyte, int blkno);
 static int gpio_ioctl(device_t, u_long, void *);
 
 /*
@@ -55,7 +55,7 @@ struct driver gpio_drv = {
 static struct devio gpio_io = {
     /* open */	NULL,
     /* close */	NULL,
-    /* read */	NULL,
+    /* read */	gpio_read,
     /* write */	NULL,
     /* ioctl */	gpio_ioctl,
     /* event */	NULL,
@@ -63,28 +63,26 @@ static struct devio gpio_io = {
 
 static device_t gpio_dev;	/* device object */
 
-/*
+
 static int gpio_read(device_t dev, char *buf, size_t *nbyte, int blkno)
 {
-	if(*nbyte >= sizeof(uint64_t)){
-		*((uint64_t*)buf) = GPIO_A_IN | ((uint64_t)GPIO_B_IN) << 32;
-		return sizeof(uint32_t);
+	if(*nbyte < sizeof(uint32_t))
+		return -1;
+
+	*nbyte = sizeof(uint32_t);
+
+	switch(blkno){
+		case GPIO_IOC_BANK_A:
+			(*(uint32_t*)buf) = GPIO_A_IN;
+			return 0;
+		case GPIO_IOC_BANK_B:
+			(*(uint32_t*)buf) = GPIO_B_IN;
+			return 0;
 	}
-	if(*nbyte >= sizeof(uint32_t)){
-		*((uint32_t*)buf) = GPIO_A_IN;
-		return sizeof(uint32_t);
-	}
-	if(*nbyte >= sizeof(uint16_t)){
-		*((uint16_t*)buf) = (uint16_t)GPIO_A_IN;
-		return sizeof(uint16_t);
-	}
-	if(*nbyte >= sizeof(uint8_t)){
-		*((uint8_t*)buf) = (uint8_t)GPIO_A_IN;
-		return sizeof(uint8_t);
-	}
-	return 0;
+	return -1;
 }
 
+/*
 static int gpio_write(device_t dev, char *buf, size_t *nbyte, int blkno)
 {
 	return 0;
@@ -121,7 +119,6 @@ static int gpio_ioctl(device_t dev, u_long cmd, void *arg)
 static int gpio_init(void)
 {
 	/* Initialize port */
-	
 
 	/* Register the device */
 	gpio_dev = device_create(&gpio_io, "gpio", DF_CHR);

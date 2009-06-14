@@ -107,7 +107,7 @@ static void serial_start(struct tty *tp)
 
 	sched_lock();
 	while ((c = ttyq_getc(&tp->t_outq)) >= 0) {
-		if (c == '\n')
+		if (c == '\n' && (tp->t_oflag & ONLCR))
 			serial_putc('\r');
 		serial_putc(c);
 	}

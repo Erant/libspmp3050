@@ -81,8 +81,16 @@ machine_init(void)
 	
 	/* REG(8) = 0x79; */
 	/* REG(0x111) = 0xB2; */
+	/* Unit turn on */
+	GPIO_DISABLE = 0x00;
+	GPIO_A_DIR |= 0x2;
+	GPIO_A_OUT |= 0x2;
+
 	*((uint32_t*)0x10000008) = 0xFFFFFFFF;
 	*((uint32_t*)0x10000110) = 0xFFFFFFFF;
+
+/*
+ * This is majorly broken! GPIO madness.
 	{
 		uint8_t val;
 		
@@ -90,12 +98,12 @@ machine_init(void)
 		
 		switch ((REG(0xB2) & 6) >> 1) {
 			case 0:
-				REG(0x136) = 11;
+				REG(0x136) = 0xB;
 				if (val == 1) REG(0x132) = 0;
 				break;
 		
 			case 1:
-				REG(0x136) = 13;
+				REG(0x136) = 0xD;
 				if (val == 1) {
 					REG(0x123) = 6;
 					REG(0x132) = 0;
@@ -103,7 +111,7 @@ machine_init(void)
 				break;
 		
 			case 2:
-				REG(0x136) = 15;
+				REG(0x136) = 0xF;
 				if (val == 1) {
 					REG(0x123) = 7;
 					REG(0x132) = 0;
@@ -111,7 +119,6 @@ machine_init(void)
 				break;
 		}
 	}
-/*	
 	SYS_REG = 1;
-*/
+	*/
 }

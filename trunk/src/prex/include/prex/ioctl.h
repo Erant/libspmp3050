@@ -94,8 +94,15 @@ struct __timeval {
 /*
  * GPIO control codes
  */
-#define GPIO_IOC_SET			_IOR('G', 0, gpio_ioc_struct)
-#define GPIO_IOC_GET			_IOW('G', 1, uint32_t*)
+#define GPIO_IOC_SET			_IOW('G', 0, gpio_ioc_struct)
+#define GPIO_IOC_GET			_IOR('G', 1, uint32_t*)
+
+#define GPIO_IOC_BANK_A		0
+#define GPIO_IOC_BANK_B		1
+#define	GPIO_IOC_NR_BANKS	2
+
+#define	GPIO_IOC_OUT		0
+#define GPIO_IOC_DIR		1
 
 typedef struct _gpio_ioc_struct{
 	int gpio_bank;
@@ -103,6 +110,21 @@ typedef struct _gpio_ioc_struct{
 	uint32_t mask;
 	uint32_t val;
 }gpio_ioc_struct;
+
+
+/*
+ * Button control codes
+ */
+
+#define BUT_IOC_ADD_MAP			_IOW('B', 0, button)
+#define BUT_IOC_DEL_MAP			_IOW('B', 1, button)
+#define BUT_IOC_CLEAR_MAP		_IOW('B', 2, void*)
+#define BUT_IOC_GET_RAW			_IOR('B', 3, uint32_t*)
+
+typedef struct{
+	uint32_t src_mask;
+	uint32_t dst_mask;
+}button;
 
 /*
  * LCD control codes
