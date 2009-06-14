@@ -35,10 +35,19 @@
 #include <prex/prex.h>
 #include <sys/ioctl.h>
 
-void printhex(uint8_t *buf, size_t n, uint32_t addr, int linew){
+void printhex(uint8_t *buf, size_t n, uint32_t addr, int linew) {
 	size_t pos,i, l, j;
+	int is_same = 0;
 	for (pos=0;pos<n;pos+=linew,addr+=linew){
 		l = pos+linew>n?n:pos+linew;
+		if (pos >= linew) {
+			if (!memcmp(buf+pos, buf+pos-linew, linew)) {
+				if (!is_same) printf("*\n");
+				is_same = 1;
+				continue;
+			}
+		}
+		is_same=0;
 		printf("%08X   ", addr);
 		for (i=pos,j=0;i<pos+linew;i++,j++){
 			if (i<n){
@@ -63,12 +72,12 @@ void printhex(uint8_t *buf, size_t n, uint32_t addr, int linew){
 	}
 }
 
-#define SECTOR_SIZE	2048
+#define MAX_PAGE_SIZE	8192
 #define START	(46208 * 4)
 #define	STEP	1
-#define END		(46210 * 4)
+#define END		0x100000
 
-static char buf[SECTOR_SIZE];
+static char buf[MAX_PAGE_SIZE];
 nand_ioc_struct nand_info;
 
 int main(int argc, char *argv[])
@@ -91,11 +100,19 @@ int main(int argc, char *argv[])
 		nand_info.nand_num_blocks, nand_info.nand_pages_per_block, nand_info.nand_bytes_per_page, nand_info.nand_spare_per_page);
 	
 	for(; i < (END); i += STEP){
+		size = nand_info.nand_bytes_per_page + nand_info.nand_spare_per_page;
 		device_read(nand, buf, &size, i);
+/*		printf("read %d bytes\n", size);
+
+		printf("Data:\n"); */
+		for (j = 0; j < size; j++) if (buf[j]!=0xFF) break;
+		if (j == size) continue;
+		printhex(buf, size, i*size, 16);
+/*
 		temp = 1;
 		temp2 = 0;
 	
-		for(j = 0; j < sizeof(buf); j++){
+		for(j = 0; j < size; j++){
 			temp |= buf[j] ^ 0xFF;
 			temp2 |= buf[j];
 		}
@@ -103,16 +120,18 @@ int main(int argc, char *argv[])
 	
 		if(buf[0x1FE] == 0x55 && buf[0x1FF] == 0xAA)
 			temp = 1;
+*/
+
 /*	
 		if(buf[0] == 0x0F && buf[1] == 0x03 && buf[2] == 0xCC)
 			temp = 1;
 */
-		if(temp){
-			printhex(buf, sizeof(buf), i * SECTOR_SIZE, 16);
+/*		if(temp){
+			printhex(buf, sizeof(buf), i * SECTOR_SIZE, 16); */
 			/* return 0; */
-		}
+/*		}
 		else
-			printf("Block %d is empty.\n", i);
+			printf("Block %d is empty.\n", i);  */
 	}
 	device_close(nand);
 }
