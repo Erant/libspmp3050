@@ -19,6 +19,14 @@ static int nand_ioctl(device_t, u_long, void *);
 static uint8_t page_buf[MAX_PAGE_SIZE];
 static uint16_t translate[0x1F20];
 
+uint32_t le32(const uint8_t *p) {
+        return (p[3] << 24) | (p[2] << 16) | (p[1] << 8) | p[0];
+}
+
+uint16_t le16(const uint8_t *p) {
+        return (p[1] << 8) | p[0];
+}
+
 nand_ioc_struct nand_info = {0,0,0,0};
 
 /*
@@ -75,7 +83,7 @@ void NAND_WriteCmd(uint8_t cmd) {
 void NAND_WriteAddr(uint32_t page_no, uint32_t col_no) {
 	NAND_CTRL_HI = (NAND_CTRL_HI & ~NAND_CTRL_CLE) | NAND_CTRL_ALE;
 	NAND_DATA = col_no & 0xFF;
-	NAND_DATA = (col_no >> 8) & 0x0F;
+	NAND_DATA = (col_no >> 8);
 	NAND_DATA = (page_no & 0xFF);
 	NAND_DATA = (page_no >> 8) & 0xFF;
 	NAND_DATA = (page_no >> 16) & 0x0F;
@@ -131,7 +139,24 @@ void NAND_ReadPage(void* buf, int page_no) {
 	NAND_WaitCmdBusy();
 	NAND_WaitReadBusy();
 
-	for(; i < nand_info.nand_bytes_per_page; i++) {
+	for(; i < nand_info.nand_bytes_per_page + nand_info.nand_spare_per_page; i++) {
+		NAND_StrobeRead();
+		/* NAND_WaitReadBusy(); */
+		charbuf[i] = NAND_ReadByte();
+	}
+	NAND_Init();
+}
+
+void NAND_ReadHead(void* buf, int page_no) {
+	int i = 0;
+	uint8_t* charbuf = (uint8_t*)buf;
+	NAND_WriteCmd(0x00);
+	NAND_WriteAddr(page_no, 0);
+	NAND_WriteCmd(0x30);
+	NAND_WaitCmdBusy();
+	NAND_WaitReadBusy();
+
+	for(; i < 0x10; i++) {
 		NAND_StrobeRead();
 		/* NAND_WaitReadBusy(); */
 		charbuf[i] = NAND_ReadByte();
@@ -143,7 +168,7 @@ void NAND_ReadPageSpare(void * buf, int page_no) {
 	int i = 0;
 	uint8_t* charbuf = (uint8_t*)buf;
 	NAND_WriteCmd(0x00);
-	NAND_WriteAddr(page_no, 0x800);
+	NAND_WriteAddr(page_no, nand_info.nand_bytes_per_page);
 	NAND_WriteCmd(0x30);
 	NAND_WaitCmdBusy();
 	NAND_WaitReadBusy();
@@ -155,24 +180,41 @@ void NAND_ReadPageSpare(void * buf, int page_no) {
 	NAND_Init();
 }
 
+void NAND_ReadRsvBlk(void) {
+	NAND_ReadPage(page_buf, 0);
+	char asciiNamebuf[128];
+	strncpy(asciiNamebuf, page_buf, 8);
+	asciiNamebuf[8] = '\0';
+	printf("Read NANDRsv block: asciiName = [%s] signature = [0x%x] checksum = [%x]\n", 
+		asciiNamebuf, le16(page_buf + 8), le16(page_buf + 0xe));
+	printf("nrFwBlks = [0x%x] fwStartBlk = [0x%x] nrFwBlks2 = [0x%x] fwStartBlk2 = [0x%x]\n",
+		le32(page_buf + 0x14), le32(page_buf + 0x10), le32(page_buf + 0x20), le32(page_buf + 0x1c));
+	printf("nrRsvA = [0x%x] nrRsvB = [0x%x] nrRsvC = [0x%x] nrRsvBlks = [0x%x] checksum = [0x%x]\n",
+		le16(page_buf + 0x24), le16(page_buf + 0x26), le16(page_buf + 0x28), le16(page_buf + 0xc));
+}
+
 /* Returns the page containing the blockmap */
 int NAND_FillBlockmap(void) {
 	int i = 0, j;
 	uint16_t page;
 	int* buf = (int*)page_buf;
-	for(; i < 0x1F20; i++){
-		for(j = 0; j < nand_info.nand_pages_per_block; j++){
-			NAND_ReadPageSpare(page_buf, i * nand_info.nand_pages_per_block + j);
-			if(page_buf[0x5] != 0xFF){
-				page = (((int)page_buf[0x6]) << 8) | page_buf[0x7];
-				page &= 0x3FF;
+	for(; i < nand_info.nand_num_blocks; i++) {
+		NAND_ReadPageSpare(page_buf, i * nand_info.nand_pages_per_block);
+			if(page_buf[0] == 0xFF && page_buf[0x1] != 0xFF){
+				page = (((int)page_buf[0x1]) << 8) | page_buf[0x2];
+				page &= 0xFFF;
 				translate[page] = i;
-				printf("buf: %08X %08X %08X %08X\n",buf[0],buf[1],buf[2],buf[3]);
+				printf("spare@%04X: %02X %02X %02X %02X\n",
+					i, page_buf[0],page_buf[1],page_buf[2],page_buf[3]);
 				printf("Added translation from %04X to %04X\n", page, i);
-				break;
+/*				break; */
 			}
+/*			NAND_ReadHead(page_buf, i * nand_info.nand_pages_per_block + j);
+			if (strncmp(page_buf, "OHAI", 4) == 0) {
+				printf("found OHAI @ page %x (block %x)\n", i * nand_info.nand_pages_per_block + j, i);
+				return 0;
+			} */
 		}
-	}
 	return 0;
 }
 
@@ -226,9 +268,9 @@ static int nand_init(void) {
 		(nand_id[2]&0x80)?"Yes":"No", (nand_id[2]&0x40)?"Yes":"No", 1 << ((nand_id[2]&0x30) >> 4),
 		2 << ((nand_id[2]&0x0C) >> 2), 1 << (nand_id[2]&3)); */
 
-
-/*	printf("Creating blockmap...\n");
-	blockmap = NAND_FillBlockmap(); */
+		NAND_ReadRsvBlk();
+	printf("Creating blockmap...\n");
+	blockmap = NAND_FillBlockmap();
 	/* NAND_ReadSector(translate, 2); */
 	return 0;
 }
@@ -242,7 +284,7 @@ static int nand_read(device_t dev, char *buf, size_t *nbyte, int blkno) {
 	/* Temporary addition */
 	/* blkno += 0x3E5000; This is AIMG */
 	/* blkno += 0x30000;  Main FAT partition  */
-	printf("Reading %d bytes from block %d.\n",todo, blkno);
+	printf("Reading %d bytes from page %d.\n",todo, blkno);
 	if(dev == nand_dev[0]){ /* Main device, no adjusting */
 
 	}
@@ -258,7 +300,7 @@ static int nand_read(device_t dev, char *buf, size_t *nbyte, int blkno) {
 
 	if(!kbuf)
 		return EFAULT;
-
+/*
 	while(todo > 0){
 		sector = blkno / 4;
 		sub_sector = blkno % 4;
@@ -276,6 +318,11 @@ static int nand_read(device_t dev, char *buf, size_t *nbyte, int blkno) {
 		}
 		blkno++;
 	}
+	*/
+
+	NAND_ReadPage(page_buf, blkno);
+/*	NAND_ReadPageSpare(page_buf + nand_info.nand_bytes_per_page, blkno);*/
+	memcpy(kbuf, page_buf, todo);
 	return 0;
 }
 
@@ -288,7 +335,7 @@ static int nand_ioctl(device_t dev, u_long cmd, void *arg) {
 		case NANDIOC_GET_INFO:
                 if (umem_copyout(&nand_info, arg, sizeof(nand_info)))
                         return EFAULT;
-                break;
+			return 0;
 		
 	}
 	printf("Whoops, wrong ioctl received!\n");
