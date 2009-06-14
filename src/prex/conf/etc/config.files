@@ -60,6 +60,7 @@ bootfiles	$(SRCDIR)/usr/sample/hello/hello
 bootfiles	$(SRCDIR)/usr/sample/gpio/gpio
 bootfiles	$(SRCDIR)/usr/sample/xxd/xxd
 bootfiles	$(SRCDIR)/usr/sample/lcd/lcd
+bootfiles	$(SRCDIR)/usr/sample/buttons/buttons
 #bootfiles	$(SRCDIR)/usr/sample/caveheli/caveheli
 
 #bootfiles	$(SRCDIR)/usr/test/args/args
