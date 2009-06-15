@@ -40,18 +40,18 @@ void printhex(uint8_t *buf, size_t n, uint32_t addr, int linew) {
 	int is_same = 0;
 	for (pos=0;pos<n;pos+=linew,addr+=linew){
 		l = pos+linew>n?n:pos+linew;
-		if (pos >= linew) {
+/*		if (pos >= linew) {
 			if (!memcmp(buf+pos, buf+pos-linew, linew)) {
 				if (!is_same) printf("*\n");
 				is_same = 1;
 				continue;
 			}
-		}
+		} */
 		is_same=0;
-		printf("%08X   ", addr);
+		printf("%08X: ", addr);
 		for (i=pos,j=0;i<pos+linew;i++,j++){
 			if (i<n){
-				printf("%02X ", buf[i]);
+				printf("%02X", buf[i]);
 			}
 			else
 			{
@@ -82,32 +82,45 @@ nand_ioc_struct nand_info;
 
 int main(int argc, char *argv[])
 {
-	unsigned int i = START;
+	unsigned int start_page, stop_page, i;
 	int j;
 	uint8_t temp, temp2;
 	int size = sizeof(buf);
 	device_t nand;
-    device_open("nand", O_RDONLY, &nand);
-	
+	char device_name[16];
+	i = 0;
+	start_page=0;
+	stop_page = 0;
+	strcpy(device_name, "nand");
 	printf("argc = %d arg0='%s' arg1='%s'\n", argc, argv[0], argv[1]);
-	if (argc > 1) {
-		i = strtoul(argv[1], NULL, 0);
-		printf("start page = %u\n", i);
+	if (argc > 2) {
+		strncpy(device_name, argv[1], 15);
+		device_name[15] = '\0';
+		printf("device name = %s\n", device_name);
+		argv++;
 	}
+	
+	if (argc > 1) {
+		start_page = strtoul(argv[1], NULL, 0);
+		printf("start page = %u\n", start_page);
+	}
+	
+	stop_page = start_page + 128;
+    device_open(device_name, O_RDONLY, &nand);
 	
 	device_ioctl(nand, NANDIOC_GET_INFO, &nand_info);
 	printf("NAND: nand_num_blocks=%u nand_pages_per_block=%u nand_bytes_per_page=%u nand_spare_per_page=%u\n",
 		nand_info.nand_num_blocks, nand_info.nand_pages_per_block, nand_info.nand_bytes_per_page, nand_info.nand_spare_per_page);
 	
-	for(; i < (END); i += STEP){
-		size = nand_info.nand_bytes_per_page + nand_info.nand_spare_per_page;
+	for(i = start_page; i < stop_page; i += STEP){
+		size = nand_info.nand_bytes_per_page;
 		device_read(nand, buf, &size, i);
 /*		printf("read %d bytes\n", size);
 
 		printf("Data:\n"); */
-		for (j = 0; j < size; j++) if (buf[j]!=0xFF) break;
-		if (j == size) continue;
-		printhex(buf, size, i*size, 16);
+/*		for (j = 0; j < size; j++) if (buf[j]!=0xFF) break;
+		if (j == size) continue; */
+		printhex(buf, 4096, (i-start_page)*4096, 16);
 /*
 		temp = 1;
 		temp2 = 0;
