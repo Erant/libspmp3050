@@ -55,6 +55,7 @@
 
 char buttons[MAX_BUTTONS][32] = {"left","right","up", "down", "A", "B", "X", "OK", "volume up", "volume down", "ESC", "picture"};
 uint32_t button_map[] = {BUT_LEFT, BUT_RIGHT, BUT_UP, BUT_DOWN, BUT_A, BUT_B, BUT_X, BUT_OK, BUT_VOL_UP, BUT_VOL_DOWN, BUT_ESC, BUT_PICTURE};
+button map_file[MAX_BUTTONS];
 
 int main(int argc, char *argv[])
 {
@@ -63,7 +64,8 @@ int main(int argc, char *argv[])
 	uint32_t raw, prev_raw = 0;
 	u_long start, end;
 	int raw_size = sizeof(raw);
-	int i = 0, val;
+	int i = 0, val, ret;
+	FILE* fp;
 	volatile int j;
 	
 	if(device_open("buttons", 0, &but_dev)){
@@ -71,29 +73,51 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
-	for(; i < MAX_BUTTONS; i++){
-		printf("Please press the %s button.\n", buttons[i]);
-		prev_raw = 0;
-		do{
-			device_ioctl(but_dev, BUT_IOC_GET_RAW, &raw);
-		}while(raw == prev_raw);
+	fp = fopen("/etc/button.map", "r");
+	if(fp){
+		for(; i < MAX_BUTTONS; i++){
+			ret = fscanf(fp, "%08X %08X\n", &but_struct.dst_mask, &but_struct.src_mask);
+			if(ret == EOF)
+				break;
+			if(ret != 2){
+				i = 0;
+				goto remap;
+				printf("button.map has been corrupted. Please remap your buttons.\n");
+			}			
+			map_file[i] = but_struct;
+			device_ioctl(but_dev, BUT_IOC_ADD_MAP, &but_struct);
+		}
+		fclose(fp);
+	}
+	else
+	{
 
-		but_struct.dst_mask = button_map[i];
-		but_struct.src_mask = raw;
-		device_ioctl(but_dev, BUT_IOC_ADD_MAP, &but_struct);
+remap:
+		for(; i < MAX_BUTTONS; i++){
+			printf("Please press the %s button.\n", buttons[i]);
+			prev_raw = 0;
+			do{
+				device_ioctl(but_dev, BUT_IOC_GET_RAW, &raw);
+			}while(raw == prev_raw);
 
-		do{
-			device_ioctl(but_dev, BUT_IOC_GET_RAW, &raw);
-		}while(raw);
+			but_struct.dst_mask = button_map[i];
+			but_struct.src_mask = raw;
+			device_ioctl(but_dev, BUT_IOC_ADD_MAP, &but_struct);
+			map_file[i] = but_struct;
+	
+			do{
+				device_ioctl(but_dev, BUT_IOC_GET_RAW, &raw);
+			}while(raw);
+		}
 	}
 
 	printf("Buttons mapped. Press UP and DOWN to set the CPU multiplier.\n");
-	printf("Press OK to benchmark.\n");
+	printf("Press OK to benchmark, A to create a map file or ESC to exit.\n");
 
 	while(1){
 		device_read(but_dev, &raw, &raw_size, 0);
-		if(raw != prev_raw){
-			printf("Buttons pressed: %s", raw ? "" : "none.");
+		if(raw != prev_raw && raw){
+			printf("Buttons pressed: ");
 			val = 0;
 			for(i = 0; i < MAX_BUTTONS; i++){
 				if(raw & button_map[i])
@@ -109,6 +133,16 @@ int main(int argc, char *argv[])
 				for(j = 0; j < 100000; j++);
 				sys_time(&end);
 				printf("\nTook %d ticks", end - start);
+			}
+			if(raw & BUT_ESC){
+				exit(0);
+			}
+			if(raw & BUT_A){
+				printf("\nWriting buttonmap to /etc/button.map");
+				fp = fopen("/etc/button.map", "w");
+				for(i = 0; i < MAX_BUTTONS; i++)
+					fprintf(fp, "%08X %08X\n", map_file[i].dst_mask, map_file[i].src_mask);
+				fclose(fp);
 			}
 
 			*((volatile uint8_t*)0x10000123) += val;
