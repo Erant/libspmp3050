@@ -44,6 +44,8 @@ int main(int argc, char *argv[])
 {
 	device_t lcddev;
 	uint16_t* fb;
+	char c;
+	FILE* fp;
 	uint8_t pixel[3];
 	/* uint8_t* image = header_data; */
 	int i, j, k;
@@ -60,7 +62,7 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 
-	printf("drawing a test patern to the framebuffer( yellow/blue diagonal separation )\n");
+	printf("LCD init tester v0.1 by avoozl and Erant.\n");
 	
 	for(i = 0; i < 320; i++)
 	{
@@ -72,14 +74,31 @@ int main(int argc, char *argv[])
 
     device_ioctl(lcddev, LCDIOC_SET_FB, fb);
 
+	int nr = 0, prev_nr = 0;
     while(1)
       {
-        int nr=0;
-        printf("enter init number (0 to stop)\n");
+        printf("Enter init number (0 to stop)\n");
         scanf("%d", &nr);
-        if (nr==0)
-          break;
-        printf("initing number %d\n", nr );
+        if (nr==0){
+			printf("Do you want to store this init? y/n\n");
+			do{
+				scanf("%c", &c);
+			}while(!(c == 'y' || c == 'n'));
+			if(c == 'n')
+				break;
+
+			fp = fopen("/etc/lcd.config", "w");
+			if(!fp){
+				printf("Failed to write to lcd config file.\n");
+				break;
+			}
+
+			fprintf(fp, "%d\n", prev_nr);
+			fclose(fp);
+			break;
+		}
+		prev_nr = nr;
+        printf("Using LCD init number %d\n", nr );
         device_ioctl(lcddev, LCDIOC_INIT, nr);
 
         device_ioctl(lcddev, LCDIOC_SET_BACKLIGHT, 1);
@@ -93,7 +112,6 @@ int main(int argc, char *argv[])
 		fb[j] = RGB(pixel[0], pixel[1], pixel[2]);
 	}
 */
-	device_ioctl(lcddev, LCDIOC_DRAW, NULL);
-	device_ioctl(lcddev, LCDIOC_SET_BACKLIGHT, 1);
+	device_ioctl(lcddev, LCDIOC_SET_BACKLIGHT, 0);
 	device_close(lcddev);
 }
