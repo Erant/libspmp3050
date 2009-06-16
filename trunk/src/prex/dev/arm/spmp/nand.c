@@ -348,7 +348,7 @@ int NAND_FillBlockmap(void) {
 	for(i = 1; i < nand_info.nand_num_blocks - nandrsv_header.nrRsvBlks; i++) {
 		uint16_t logical_blkno = NAND_GetLogicalBlkno(i);
 		if (logical_blkno < 0xFF00) {
-//			printf("logical blkno = %x\n", logical_blkno);
+/* 			printf("logical blkno = %x\n", logical_blkno); */
 			translate_user[logical_blkno] = i;
 			printf("translate_user[%x]=%x\n", logical_blkno, i);
 			if (logical_blkno < min_block)
