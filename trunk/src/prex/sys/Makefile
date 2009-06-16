@@ -8,8 +8,8 @@ OBJS=		./arch/$(ARCH)/$(PLATFORM)/platform.o \
 LIBS+=		./lib/libkern.a
 LD_SCRIPT=	./arch/$(ARCH)/$(ARCH)/kernel.ld
 
-#MAP=		prex.map
+MAP=		prex.map
 #DISASM= 	prex.lst
-#SYMBOL= 	prex.sym
+SYMBOL= 	prex.sym
 
 include $(SRCDIR)/mk/sys.mk
