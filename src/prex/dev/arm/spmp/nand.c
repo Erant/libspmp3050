@@ -17,7 +17,10 @@ static int nand_ioctl(device_t, u_long, void *);
 #define MAX_PAGE_SIZE		8192
 
 static uint8_t page_buf[MAX_PAGE_SIZE];
-static uint16_t translate[0x1F20];
+static uint16_t *translate_user = NULL, *mapTable = NULL, *translate_fw = NULL, 
+	*translate_rsvA = NULL, *translate_rsvB = NULL;
+/* Not yet implemented, because I haven't seen these used on a device
+static uint16_t *translate_rsvC = NULL, *translate_fw2 = NULL; */
 
 uint32_t le32(const uint8_t *p) {
         return (p[3] << 24) | (p[2] << 16) | (p[1] << 8) | p[0];
@@ -182,60 +185,205 @@ void NAND_ReadPageSpare(void * buf, int page_no) {
 	NAND_Init();
 }
 
+typedef struct {
+	char asciiName[8];
+	uint16_t signature;
+	uint16_t nrUserBlks;
+	uint16_t nrRsvBlks;
+	uint16_t checksum;
+	uint32_t fwStartBlk;
+	uint32_t nrFwBlks;
+	uint32_t unk1;
+	uint32_t fwStartBlk2;
+	uint32_t nrFwBlks2;
+	uint16_t nrRsvA;
+	uint16_t nrRsvB;
+	uint16_t nrRsvC;
+	uint16_t unk2;
+	uint32_t unk3;
+	uint32_t unk4;
+} __packed nandrsv_header_t;
+
+static nandrsv_header_t nandrsv_header;
+
 void NAND_ReadRsvBlk(void) {
 	NAND_ReadPage(page_buf, 0);
+	printf("sizeof header = %x page_buf=%x rsv_header=%x\n", sizeof(nandrsv_header),
+		(uint32_t)page_buf, (uint32_t)&nandrsv_header);
+	memcpy(&nandrsv_header, page_buf, sizeof(nandrsv_header));
 	char asciiNamebuf[128];
-	strncpy(asciiNamebuf, page_buf, 8);
-	asciiNamebuf[8] = '\0';
+	strncpy(asciiNamebuf, nandrsv_header.asciiName, sizeof(nandrsv_header.asciiName));
+	asciiNamebuf[sizeof(nandrsv_header.asciiName)] = '\0';
 	printf("Read NANDRsv block: asciiName = [%s] signature = [0x%x] checksum = [%x]\n", 
-		asciiNamebuf, le16(page_buf + 8), le16(page_buf + 0xe));
+		asciiNamebuf, nandrsv_header.signature, nandrsv_header.checksum);
 	printf("nrFwBlks = [0x%x] fwStartBlk = [0x%x] nrFwBlks2 = [0x%x] fwStartBlk2 = [0x%x]\n",
-		le32(page_buf + 0x14), le32(page_buf + 0x10), le32(page_buf + 0x20), le32(page_buf + 0x1c));
-	printf("nrRsvA = [0x%x] nrRsvB = [0x%x] nrRsvC = [0x%x] nrRsvBlks = [0x%x] checksum = [0x%x]\n",
-		le16(page_buf + 0x24), le16(page_buf + 0x26), le16(page_buf + 0x28), le16(page_buf + 0xc));
+		nandrsv_header.nrFwBlks, nandrsv_header.fwStartBlk,
+		nandrsv_header.nrFwBlks2, nandrsv_header.fwStartBlk2);
+	printf("nrRsvA = [0x%x] nrRsvB = [0x%x] nrRsvC = [0x%x] nrRsvBlks = [0x%x]\n",
+		nandrsv_header.nrRsvA, nandrsv_header.nrRsvB, nandrsv_header.nrRsvC, nandrsv_header.nrRsvBlks);
+	printf("nrUserBlks = %x unk1 = %x unk2 = %x unk3 = %x unk4 = %x\n",
+		nandrsv_header.nrUserBlks, nandrsv_header.unk1, nandrsv_header.unk2, 
+		nandrsv_header.unk3, nandrsv_header.unk4);
+}
+
+static uint16_t NAND_GetLogicalBlkno(uint16_t physical_block) {
+	uint8_t buf[256];
+
+	NAND_ReadPageSpare(buf, physical_block * nand_info.nand_pages_per_block);
+/*	printf("block %x buf=[%02x %02x %02x %02x]\n", physical_block, buf[0], buf[1], buf[2], buf[3]); */
+	if (buf[0] != 0xFF) return 0xFFFE; /* bad block ? */
+	
+	/* Spare area has format FF aa bb xx xx xx xx xx xx xx... 
+		aa = MSB of logical block
+		bb = LSB of logical block
+		xx xx ... = 13 bytes of ECC data
+	*/
+	if (buf[1] != 0xFF) return (buf[1] << 8 | buf[2]) % nand_info.nand_num_blocks;
+	
+	/* Spare area has format FF FF aa bb aa bb xx xx xx xx...
+		aa = MSB of logical block
+		bb = LSB of logical block
+		xx xx ... = 10 bytes of ECC data?
+	*/
+	 if (buf[2] == 0xFF && buf[3] == 0xFF)
+		return 0xFFFF; /* unprogrammed block */
+
+	if ((buf[2] != buf[4]) || (buf[3] != buf[5])) {
+		printf("Warning: Logical block number is inconsistent for physical block %x (%02x %02x /  %02x %02x)\n",
+			physical_block, buf[2], buf[3], buf[4], buf[5]);
+		/* continue anyway? */
+	}
+	
+	return (buf[2] << 8 | buf[3])  % nand_info.nand_num_blocks;
+}
+
+void NAND_ReadTables(void) {
+	int i;
+	/* read mapTable */
+	NAND_ReadPage(page_buf, 1);
+
+	for (i=0; i < nandrsv_header.nrRsvBlks; i++) {
+		memcpy(&mapTable[i], page_buf + i * 2, 2);
+	}
+
+/*	for (i=0; i < nandrsv_header.nrRsvBlks; i++) {
+		printf("mapTable[%x]=%x spare=%04x\n", i, mapTable[i], NAND_GetLogicalBlkno(mapTable[i]));
+	} */
+	
+	/* Having a RsvC section will probably displace the B and A sections, but I've never seen one.
+	   If we have one but don't account for it, it will shift the maps of RsvB and RsvA over, so
+	   just panic so someone will fix me. */
+	
+	if (nandrsv_header.nrRsvC != 0) {
+		printf("ERROR: Don't know how to handle %x-block RsvC starting at %x\n", 
+			nandrsv_header.nrRsvC, mapTable[0]);
+		panic("NAND Init failure: unsupported configuration\n");
+	}
+
+	/* Consistency checks to avoid going past the end of mapTable[] */
+	if (nandrsv_header.nrRsvB > nandrsv_header.nrRsvBlks)
+		panic("NAND: nrRsvB > nrRsvBlks\n");
+	
+	if ((nandrsv_header.nrRsvB + nandrsv_header.nrRsvA) > nandrsv_header.nrRsvBlks)
+		panic("NAND: nrRsvB + nrRsvA > nrRsvBlks\n");
+	
+	if ((nandrsv_header.fwStartBlk + nandrsv_header.nrFwBlks) > nandrsv_header.nrRsvBlks)
+		panic("NAND: fwStartBlk + nrFwBlks > nrRsvBlks\n");
+
+/* fill out tables from mapTable */
+
+	for (i=0; i < nandrsv_header.nrRsvB; i++) {
+		translate_rsvB[NAND_GetLogicalBlkno(mapTable[i])] = mapTable[i];
+	}
+
+	for (i=0; i < nandrsv_header.nrRsvA; i++) {
+		translate_rsvA[NAND_GetLogicalBlkno(mapTable[i+nandrsv_header.nrRsvB])] = 
+			mapTable[i+nandrsv_header.nrRsvB];
+	}
+	
+	for (i=0; i < nandrsv_header.nrFwBlks; i++) {
+		translate_fw[i] = mapTable[i+nandrsv_header.fwStartBlk];
+	}
+	
+	/* We don't have to panic here, because nothing else depends on the location of this buffer */
+	if (nandrsv_header.nrFwBlks2 != 0) {
+		printf("WARNING: Don't know how to handle %x-block firmware2 starting at %x\n",
+			nandrsv_header.nrFwBlks2, mapTable[nandrsv_header.fwStartBlk2]);
+	}
+
+/* display results */
+	printf("Reserved area translation tables:\n");
+	printf("RsvB: [");
+	for (i=1; i < nandrsv_header.nrRsvB; i++) {
+		if (translate_rsvB[i] == 0xFFFF) printf("x ");
+		else
+			printf("%04x%s", translate_rsvB[i], (nandrsv_header.nrRsvB - i)>1?" ":"");
+	}
+	printf("]\n");
+	printf("RsvA: [");
+	for (i=1; i < nandrsv_header.nrRsvA; i++) {
+		if (translate_rsvA[i] == 0xFFFF) printf("x ");
+		else
+			printf("%04x%s", translate_rsvA[i], (nandrsv_header.nrRsvA - i)>1?" ":"");
+	}
+	printf("]\n");
+	printf("Firmware: [");
+	for (i=0; i < nandrsv_header.nrFwBlks; i++) {
+		printf("%04x%s", translate_fw[i], (nandrsv_header.nrFwBlks - i)>1?" ":"");
+	}
+	printf("]\n");
 }
 
 /* Returns the page containing the blockmap */
 int NAND_FillBlockmap(void) {
 	int i, j;
-	uint16_t page;
-	uint16_t min_page = 0xFFFF;
+	uint16_t min_block = 0xFFFF;
 	int* buf = (int*)page_buf;
-	/* skip first block and last 0x80 -- shouldn't hardcode that number, fixme */
-	for(i = 1; i < nand_info.nand_num_blocks - 0x80; i++) { 
-		NAND_ReadPageSpare(page_buf, i * nand_info.nand_pages_per_block);
-			if(page_buf[0] == 0xFF && page_buf[0x1] != 0xFF){
-				page = (((int)page_buf[0x1]) << 8) | page_buf[0x2];
-				page &= 0xFFF;
-				translate[page] = i;
-				printf("spare@%04X: %02X %02X %02X %02X: translate[%x]=%x\n",
-					i, page_buf[0],page_buf[1],page_buf[2],page_buf[3], page, i);
-				if(page < min_page)
-					min_page = page;
-/*				break; */
-			}
-/*			NAND_ReadHead(page_buf, i * nand_info.nand_pages_per_block + j);
-			if (strncmp(page_buf, "OHAI", 4) == 0) {
-				printf("found OHAI @ page %x (block %x)\n", i * nand_info.nand_pages_per_block + j, i);
-				return 0;
-			} */
+	/* skip first block */
+	for(i = 1; i < nand_info.nand_num_blocks - nandrsv_header.nrRsvBlks; i++) {
+		uint16_t logical_blkno = NAND_GetLogicalBlkno(i);
+		if (logical_blkno < 0xFF00) {
+			printf("logical blkno = %x\n", logical_blkno);
+			translate_user[logical_blkno] = i;
+			printf("translate_user[%x]=%x\n", logical_blkno, i);
+			if (logical_blkno < min_block)
+				min_block = logical_blkno;
 		}
-	printf("First page is: %d, mapped to: %d\n",min_page, translate[min_page]);
+	}
+	printf("First block is: %d, mapped to: %d\n", min_block, translate_user[min_block]);
 	return 0;
 }
+
+#define NAND_RAWDEV  0
+#define NAND_USERDEV 1
+#define NAND_FWDEV   2
+#define NAND_RSVADEV 3
+#define NAND_RSVBDEV 4
 
 static int nand_init(void) {
 	char nand_id[5];
 	int blockmap;
 	int i = 0;
-
+	
 	/* Create NAND device as an alias of the registered device. */
-	nand_dev[0] = device_create(&nand_io, "nand", DF_BLK);
-	if (nand_dev[0] == DEVICE_NULL)
+	nand_dev[NAND_RAWDEV] = device_create(&nand_io, "nand", DF_BLK);
+	if (nand_dev[NAND_RAWDEV] == DEVICE_NULL)
 		return -1;
 
-	nand_dev[1] = device_create(&nand_io, "nand1", DF_BLK);
-	if (nand_dev[1] == DEVICE_NULL)
+	nand_dev[NAND_USERDEV] = device_create(&nand_io, "nand_user", DF_BLK);
+	if (nand_dev[NAND_USERDEV] == DEVICE_NULL)
+		return -1;
+
+	nand_dev[NAND_FWDEV] = device_create(&nand_io, "nand_fw", DF_BLK);
+	if (nand_dev[NAND_FWDEV] == DEVICE_NULL)
+		return -1;
+
+	nand_dev[NAND_RSVADEV] = device_create(&nand_io, "nand_rsvA", DF_BLK);
+	if (nand_dev[NAND_RSVADEV] == DEVICE_NULL)
+		return -1;
+
+	nand_dev[NAND_RSVBDEV] = device_create(&nand_io, "nand_rsvB", DF_BLK);
+	if (nand_dev[NAND_RSVBDEV] == DEVICE_NULL)
 		return -1;
 	
 	NAND_Init();
@@ -277,17 +425,34 @@ static int nand_init(void) {
 		2 << ((nand_id[2]&0x0C) >> 2), 1 << (nand_id[2]&3)); */
 
 	NAND_ReadRsvBlk();
+
+/*	static uint16_t *translate_user = NULL, *mapTable = NULL, *translate_fw = NULL, 
+		*translate_rsvA = NULL, *translate_rsvB = NULL; */
+
+	printf("Allocating tables\n");
+#define ALLOC_XLATE_BUF(name, size) \
+			name = ((size)>PAGE_SIZE)?page_alloc(size):kmem_alloc(size); \
+			if (name == NULL) { \
+				printf("Couldn't malloc %d bytes for " #name "\n", (size)); \
+				return -1; \
+				} else printf("Allocated %d bytes @ %x for " #name "\n", (size), (uint32_t)name); \
+			memset(name, 0xFF, (size));
+
+	ALLOC_XLATE_BUF(mapTable, 2 * nandrsv_header.nrRsvBlks);
+	ALLOC_XLATE_BUF(translate_user, 2 * nandrsv_header.nrUserBlks);
+	ALLOC_XLATE_BUF(translate_fw, 2 * nandrsv_header.nrFwBlks);
+	ALLOC_XLATE_BUF(translate_rsvA, 2 * nandrsv_header.nrRsvA);
+	ALLOC_XLATE_BUF(translate_rsvB, 2 * nandrsv_header.nrRsvB);
+	
+	NAND_ReadTables();
 	printf("Creating blockmap...\n");
 
-	/* Filling blockmap with 0xFFFF */
-	memset(translate, 0xFF, sizeof(translate));
-	
 	blockmap = NAND_FillBlockmap();
 	/* NAND_ReadSector(translate, 2); */
 	return 0;
 }
 
-/* Horribly non-optimized, but it's late right now... */
+/* todo -- support Rsv devices */
 static int nand_read(device_t dev, char *buf, size_t *nbyte, int sector) {
 	uint8_t* kbuf = kmem_map(buf, *nbyte);
 	size_t bytes_remaining = *nbyte;
@@ -317,7 +482,7 @@ static int nand_read(device_t dev, char *buf, size_t *nbyte, int sector) {
 	
 	if(dev == nand_dev[1]) {	/* Firmware device, use blockmap */
 		/* blkno += 7168; */
-		block = translate[nand_block+1];
+		block = translate_user[nand_block+1];
 		printf("Reading from NAND block %d\n", nand_block);
 		if(block == 0xFFFF){
 			printf("No mapping found!\n");
