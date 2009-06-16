@@ -97,6 +97,13 @@ int main(int argc, char *argv[])
 			fclose(fp);
 			break;
 		}
+
+		if(nr == 9000){
+			printf("Switching to SW drawing mode.\n");
+			device_ioctl(lcddev, LCDIOC_SET_MODE, 1);
+			continue;
+		}
+
 		prev_nr = nr;
         printf("Using LCD init number %d\n", nr );
         device_ioctl(lcddev, LCDIOC_INIT, nr);

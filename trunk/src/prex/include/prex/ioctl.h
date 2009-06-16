@@ -132,7 +132,8 @@ typedef struct{
 #define LCDIOC_SET_FB			_IOW('L', 0, void*)
 #define LCDIOC_DRAW				_IOW('L', 1, int)
 #define	LCDIOC_SET_BACKLIGHT	_IOW('L', 2, int)
-#define	LCDIOC_INIT	_IOW('L', 3, int)
+#define	LCDIOC_INIT				_IOW('L', 3, int)
+#define	LCDIOC_SET_MODE			_IOW('L', 4, int)
 
 /*
  * NAND control codes

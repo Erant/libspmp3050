@@ -56,19 +56,18 @@ static int lcd_ioctl(device_t dev, u_long cmd, void *arg)
 {
 	switch(cmd){
 		case LCDIOC_SET_FB:
-			/* printf("Setting framebuffer to %08X.\n", *((void**)arg)); */
 			LCD_SetFramebuffer(arg);
 			return 0;
 		case LCDIOC_SET_BACKLIGHT:
-			/* printf("Setting backlight.\n"); */
 			LCD_SetBacklight(((int)arg));
 			return 0;
 		case LCDIOC_DRAW:
-			/* printf("Drawing framebuffer.\n"); */
 			LCD_Draw();
 			return 0;
+		case LCDIOC_SET_MODE:
+			LCD_SetMode(arg);
+			return 0;
 		case LCDIOC_INIT:
-			/* printf("Drawing framebuffer.\n"); */
 			LCD_Init( ((int)arg) );
 			return 0;
 	}
