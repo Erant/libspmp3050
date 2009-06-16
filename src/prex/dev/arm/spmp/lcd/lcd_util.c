@@ -4,6 +4,7 @@
 #include "lcd_util.h"
 #include "lcd_init.h"
 
+int lcd_mode = MODE_HW_DRAW;
 
 void delay_ms( int ms )
 {
@@ -23,6 +24,9 @@ void delay_us( int us )
   delay_ms( 1 + us / 1000 ); /* oh no you didn't (fixme) */
 }
 
+void LCD_SetMode(int mode){
+	lcd_mode = mode;
+}
 
 /* 
  * Two flags are set here, some units have the backlight enable GPIO on 0x8,
@@ -69,7 +73,17 @@ void LCD_CtrlWrite(int reg, int val){
 }
 
 void LCD_Draw(){
-	GFX_DRAW = 1;
+	int i = 0;
+	uint16_t* fb = GFX_FB_START << 1;
+	if(lcd_mode == MODE_HW_DRAW){
+		GFX_DRAW = 1;
+		return;
+	}
+	if(lcd_mode == MODE_SW_DRAW){
+		LCD_AddrWrite(0x22);		/* Fixme, not all LCDs have addr 0x22 as GRAM */
+		for(; i < 320 * 240; i++)	/* You didn't just hardcode the LCD size, didcha... */
+			LCD_CmdWrite(fb[i]);
+	}
 }
 
 void LCD_Reset(){
