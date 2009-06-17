@@ -31,10 +31,15 @@
  * load.c - load the images of boot modules
  */
 
+
 #include <boot.h>
 #include <ar.h>
 
+#define HOSTHACK
+
 #include "minilzo.h"
+
+
 
 paddr_t load_base;	/* current load address */
 paddr_t load_start;	/* start address for loading */
