@@ -72,7 +72,7 @@ void LCD_CtrlWrite(int reg, int val){
 	LCD_CmdWrite(val);
 }
 
-void LCD_SetGamma(int *vals) {
+void LCD_SetGamma(uint16_t *vals) {
 	int addr;
 	LCD_CtrlWrite(0x30, vals[0]);
 	LCD_CtrlWrite(0x31, vals[1]);

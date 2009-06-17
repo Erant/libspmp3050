@@ -10,9 +10,9 @@ void delay_us(int);
 
 void LCD_SetBacklight(int val);
 void LCD_SetMode(int mode);
-void LCD_Draw();
+void LCD_Draw(void);
 void LCD_Init(int lcd_type);
 void LCD_SetFramebuffer(void* fb);
-void LCD_SetGamma(int *vals);
+void LCD_SetGamma(uint16_t *vals);
 
 #endif /* !_LCD_UTIL_H */
