@@ -268,9 +268,9 @@ void NAND_ReadTables(void) {
 		memcpy(&mapTable[i], page_buf + i * 2, 2);
 	}
 
-/*	for (i=0; i < nandrsv_header.nrRsvBlks; i++) {
+	for (i=0; i < nandrsv_header.nrRsvBlks; i++) {
 		printf("mapTable[%x]=%x spare=%04x\n", i, mapTable[i], NAND_GetLogicalBlkno(mapTable[i]));
-	} */
+	}
 	
 	/* Having a RsvC section will probably displace the B and A sections, but I've never seen one.
 	   If we have one but don't account for it, it will shift the maps of RsvB and RsvA over, so
@@ -348,7 +348,7 @@ int NAND_FillBlockmap(void) {
 	for(i = 1; i < nand_info.nand_num_blocks - nandrsv_header.nrRsvBlks; i++) {
 		uint16_t logical_blkno = NAND_GetLogicalBlkno(i);
 		if (logical_blkno < 0xFF00) {
-/* 			printf("logical blkno = %x\n", logical_blkno); */
+/*			printf("logical blkno = %x\n", logical_blkno); */
 			translate_user[logical_blkno] = i;
 			printf("translate_user[%x]=%x\n", logical_blkno, i);
 			if (logical_blkno < min_block)
@@ -356,6 +356,11 @@ int NAND_FillBlockmap(void) {
 		}
 	}
 	printf("First block is: %d, mapped to: %d\n", min_block, translate_user[min_block]);
+	printf("User: [");
+	for (i=0; i < 200; i++) {
+		printf("%x%s", translate_user[i], (200 - i)>1?" ":"");
+	}
+	printf("]\n");
 	return 0;
 }
 
@@ -470,7 +475,7 @@ static int nand_read(device_t dev, char *buf, size_t *nbyte, int sector) {
 	static uint16_t *translate_table = NULL;
 	
 	if (dev == nand_dev[NAND_USERDEV]) {
-		translate_table = translate_user;
+		translate_table = translate_user+4;
 	}
 
 	if (dev == nand_dev[NAND_FWDEV]) {
@@ -478,7 +483,7 @@ static int nand_read(device_t dev, char *buf, size_t *nbyte, int sector) {
 	}
 
 	if (dev == nand_dev[NAND_RSVADEV]) {
-		translate_table = translate_rsvA;
+		translate_table = translate_rsvA+1;
 	}
 
 	if (dev == nand_dev[NAND_RSVBDEV]) {
@@ -499,7 +504,7 @@ static int nand_read(device_t dev, char *buf, size_t *nbyte, int sector) {
 	}
 
 	int max_bytes_to_read = nand_info.nand_pages_per_block * nand_info.nand_bytes_per_page;
-	page = sector % nand_info.nand_pages_per_block;
+	page = (sector * 512 / nand_info.nand_bytes_per_page) % nand_info.nand_pages_per_block;
 	subpage = 0;
 
 /*		page = ((sector * 512) % (nand_info.nand_pages_per_block * nand_info.nand_bytes_per_page))
@@ -523,6 +528,7 @@ static int nand_read(device_t dev, char *buf, size_t *nbyte, int sector) {
 			bytes_remaining > bytes_left_in_page ? bytes_left_in_page : bytes_remaining);
 		if (bytes_remaining <= bytes_left_in_page) break;
 		bytes_remaining -= bytes_left_in_page;
+		kbuf += bytes_left_in_page;
 		subpage = 0;
 		page++;
 	}
