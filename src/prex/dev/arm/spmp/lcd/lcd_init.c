@@ -1980,7 +1980,7 @@ void lcd_init_default(void) { /* untested */
 
 /* these are just weird */
 
-void lcd_init_4(void) { /* untested */
+void lcd_init_weird1(void) { /* untested */
 	LCD_AddrWrite(0x11);
 	delay(120);
 	LCD_CtrlWrite(0xb1, 0x28);
@@ -2031,7 +2031,7 @@ void lcd_init_4(void) { /* untested */
 	LCD_AddrWrite(0x2c);
 }
 
-void lcd_init_15(void) { /* untested */
+void lcd_init_weird2(void) { /* untested */
 	LCD_AddrWrite(0x11);
 	delay(5000);
 	LCD_CtrlWrite(0xb1, 0x16);
@@ -2136,7 +2136,7 @@ void master_lcd_init(int type)
 			lcd_init_3();
 			break;
 		case 4:
-			lcd_init_4();
+			lcd_init_weird1();
 			break;
 		case 5:
 			lcd_init_hx8347a();
@@ -2171,8 +2171,8 @@ void master_lcd_init(int type)
 			lcd_init_14();
 			break;
 		case 15:
-			lcd_init_15();
-			lcd_init_15();
+			lcd_init_weird2();
+			lcd_init_weird2();
 			break;
 		case 16:
 			lcd_init_16();
@@ -2207,19 +2207,15 @@ void master_lcd_init(int type)
 			lcd_init_25();
 			break;
 		case 26:
-			lcd_init_26_29();
-			break;
-		case 27:
-			lcd_init_27_31();
-			break;
 		case 29:
 			lcd_init_26_29();
 			break;
-		case 30:
-			lcd_init_30();
-			break;
+		case 27:
 		case 31:
 			lcd_init_27_31();
+			break;
+		case 30:
+			lcd_init_30();
 			break;
 		case 32:
 			lcd_init_32();
