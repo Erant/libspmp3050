@@ -219,7 +219,7 @@ endif
 # Rules to create OS image
 #
 ifeq ($(TYPE),OS_IMAGE)
-$(TARGET): dummy
+$(TARGET): dummy lzo1xpack-host
 ifdef BOOTFILES
 	$(AR) rcS ramdisk.a $(BOOTFILES)
 	$(AR) t ramdisk.a
@@ -229,9 +229,13 @@ else
 	$(AR) rcS tmp.a $(KERNEL) $(DRIVER) $(BOOTTASKS)
 endif
 	$(AR) t tmp.a
-	cat $(LOADER) tmp.a > $@
-	rm tmp.a
+	./lzo1xpack-host tmp.a tmp.a.lzo
+	cat $(LOADER) tmp.a.lzo > $@
+	rm tmp.a tmp.a.lzo
 endif
+
+lzo1xpack-host:	lzo1xpack-host.c
+	gcc -O3 $< -o $@
 
 
 -include Makefile.dep

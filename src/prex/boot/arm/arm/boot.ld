@@ -24,7 +24,7 @@ SECTIONS {
 		*(.bss)
 		*(COMMON)
 	}
-	. = LOADER_BASE + 0x1fff;
+	. = LOADER_BASE + 0x3fff;
 	.tail : {
 		*(.tail)
 	}

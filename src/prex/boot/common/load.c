@@ -34,6 +34,8 @@
 #include <boot.h>
 #include <ar.h>
 
+#include "minilzo.h"
+
 paddr_t load_base;	/* current load address */
 paddr_t load_start;	/* start address for loading */
 int nr_img;		/* number of module images */
@@ -115,11 +117,23 @@ setup_image(void)
 	char *magic;
 	int i;
 	long len;
-
+    unsigned int decompressedsize;
 	/*
 	 *  Sanity check for archive image
 	 */
 	magic = (char *)virt_to_phys(BOOTIMG_BASE);
+    const unsigned int imagelen = magic[0] + (magic[1]<<8) + (magic[2]<<16) + (magic[3]<<24);
+    printf("image len %d.. decompressing\n", imagelen );
+
+    lzo1x_decompress        ( magic+4, imagelen,
+                                magic+1024*1024, &decompressedsize,
+                              0 );
+
+    printf("decompressed %d bytes\n", decompressedsize );
+    memmove( magic, magic+1024*1024, decompressedsize );
+    printf("moved kernel to original location\n");
+    
+
 	if (strncmp(magic, ARMAG, 8))
 		panic("Invalid OS image");
 
