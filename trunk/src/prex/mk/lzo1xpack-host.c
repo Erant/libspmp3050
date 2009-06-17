@@ -5,6 +5,7 @@
 #include <limits.h>
 #include <stdint.h>
 
+#define HOSTHACK
 #include "../boot/common/minilzo.h"
 #include "../boot/common/minilzo.c"
 

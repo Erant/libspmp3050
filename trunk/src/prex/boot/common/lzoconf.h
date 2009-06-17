@@ -52,7 +52,10 @@
 /* #include <types.h> */
 /* #include <stddef.h> */
 
-/* typedef unsigned int size_t; */
+#ifndef HOSTHACK
+typedef unsigned int size_t;
+#endif
+
 #define NULL 0
 typedef unsigned int ptrdiff_t;
 
