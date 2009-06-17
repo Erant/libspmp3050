@@ -13,5 +13,6 @@ void LCD_SetMode(int mode);
 void LCD_Draw();
 void LCD_Init(int lcd_type);
 void LCD_SetFramebuffer(void* fb);
+void LCD_SetGamma(int *vals);
 
 #endif /* !_LCD_UTIL_H */

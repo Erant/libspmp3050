@@ -72,6 +72,20 @@ void LCD_CtrlWrite(int reg, int val){
 	LCD_CmdWrite(val);
 }
 
+void LCD_SetGamma(int *vals) {
+	int addr;
+	LCD_CtrlWrite(0x30, vals[0]);
+	LCD_CtrlWrite(0x31, vals[1]);
+	LCD_CtrlWrite(0x32, vals[2]);
+	LCD_CtrlWrite(0x35, vals[3]);
+	LCD_CtrlWrite(0x36, vals[4]);
+	LCD_CtrlWrite(0x37, vals[5]);
+	LCD_CtrlWrite(0x38, vals[6]);
+	LCD_CtrlWrite(0x39, vals[7]);
+	LCD_CtrlWrite(0x3C, vals[8]);
+	LCD_CtrlWrite(0x3D, vals[9]);
+}
+
 void LCD_Draw(){
 	int i = 0;
 	uint16_t* fb = GFX_FB_START << 1;
