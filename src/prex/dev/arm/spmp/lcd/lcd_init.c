@@ -6,6 +6,7 @@
 /* these inits are thought to be for an ILI932x */
 
 void LCD_Init_3(void) { /* untested */
+	uint16_t gamma[] = {6, 0x407, 0x200, 7, 0xf07, 0x506, 0x203, 0x607, 0x601, 0x1f00};
 	/* //--- Init sequence ---// */
 	LCD_CtrlWrite(0xE5, 0x8000);
 	
@@ -39,16 +40,7 @@ void LCD_Init_3(void) { /* untested */
 	LCD_CtrlWrite(0x21, 0x0000);
 	
 	/* //--- Adjust the Gamma Curve ---// */
-	LCD_CtrlWrite(0x30, 0x0006);
-	LCD_CtrlWrite(0x31, 0x0407);
-	LCD_CtrlWrite(0x32, 0x0200);
-	LCD_CtrlWrite(0x35, 0x0007);
-	LCD_CtrlWrite(0x36, 0x0F07);
-	LCD_CtrlWrite(0x37, 0x0506);
-	LCD_CtrlWrite(0x38, 0x0203);
-	LCD_CtrlWrite(0x39, 0x0607);
-	LCD_CtrlWrite(0x3C, 0x0601);
-	LCD_CtrlWrite(0x3D, 0x1F00);
+	LCD_SetGamma(gamma);
 	
 	/* //--- Set GRAM Area ---// */
 	LCD_CtrlWrite(0x50, 0x0000);
@@ -80,6 +72,7 @@ void LCD_Init_3(void) { /* untested */
 }
 
 void LCD_Init_3b(void) { /* tested by Inopia */
+	uint16_t gamma[] = {6, 0x407, 0x200, 7, 0xf07, 0x506, 0x203, 0x607, 0x601, 0x1f00};
 	/* //--- Init sequence ---// */
 	LCD_CtrlWrite(0xE5, 0x8000);
 	
@@ -113,17 +106,8 @@ void LCD_Init_3b(void) { /* tested by Inopia */
 	LCD_CtrlWrite(0x21, 0x0000);
 	
 	/* //--- Adjust the Gamma Curve ---// */
-	LCD_CtrlWrite(0x30, 0x0006);
-	LCD_CtrlWrite(0x31, 0x0407);
-	LCD_CtrlWrite(0x32, 0x0200);
-	LCD_CtrlWrite(0x35, 0x0007);
-	LCD_CtrlWrite(0x36, 0x0F07);
-	LCD_CtrlWrite(0x37, 0x0506);
-	LCD_CtrlWrite(0x38, 0x0203);
-	LCD_CtrlWrite(0x39, 0x0607);
-	LCD_CtrlWrite(0x3C, 0x0601);
-	LCD_CtrlWrite(0x3D, 0x1F00);
-	
+	LCD_SetGamma(gamma);
+
 	/* //--- Set GRAM Area ---// */
 	LCD_CtrlWrite(0x50, 0x0000);
 	LCD_CtrlWrite(0x51, 0x00EF);
@@ -155,6 +139,7 @@ void LCD_Init_3b(void) { /* tested by Inopia */
 
 
 void lcd_init_1(void) { /* untested */
+	uint16_t gamma[] = {0, 0x306, 0x200, 0x107, 0x404, 0x606, 0x105, 0x707, 0x600, 0x807};
 	LCD_CtrlWrite(0x00, 0x1);
 	LCD_CtrlWrite(0x01, 0x100);
 	LCD_CtrlWrite(0x03, 0x1038);
@@ -184,7 +169,6 @@ void lcd_init_1(void) { /* untested */
 	LCD_CtrlWrite(0x2b, 0x20);
 
 	/* //--- Adjust the Gamma Curve ---// */
-	uint16_t gamma[] = {0, 0x306, 0x0200, 0x107, 0x404, 0x606, 0x105, 0x707, 0x600, 0x807};
 	LCD_SetGamma(gamma);
 
 	LCD_CtrlWrite(0x50, 0x0);
@@ -217,6 +201,7 @@ void lcd_init_1(void) { /* untested */
 }
 
 void lcd_init_1b(void) { /* bushing */
+	uint16_t gamma[] = {6, 0x407, 0x200, 7, 0xf07, 0x506, 0x203, 0x607, 0x601, 0x1f00};
 	LCD_CtrlWrite(0x00, 0x1);
 	LCD_CtrlWrite(0x01, 0x100);
 	LCD_CtrlWrite(0x03, 0x1090);
@@ -242,20 +227,8 @@ void lcd_init_1b(void) { /* bushing */
 	delay(25);
 	LCD_CtrlWrite(0x20, 0x0);
 	LCD_CtrlWrite(0x21, 0x0);
-/*	LCD_CtrlWrite(0x2b, 0x20);
-	LCD_CtrlWrite(0x30, 0x0);
-	LCD_CtrlWrite(0x31, 0x306);
-	LCD_CtrlWrite(0x32, 0x200);
-	LCD_CtrlWrite(0x35, 0x107);
-	LCD_CtrlWrite(0x36, 0x404);
-	LCD_CtrlWrite(0x37, 0x606);
-	LCD_CtrlWrite(0x38, 0x105);
-	LCD_CtrlWrite(0x39, 0x707);
-	LCD_CtrlWrite(0x3c, 0x600);
-	LCD_CtrlWrite(0x3d, 0x807);*/
 
 	/* //--- Adjust the Gamma Curve ---// */
-	uint16_t gamma[] = {6, 0x0407, 0x0200, 7, 0x0f07, 0x0506, 0x0203, 0x0607, 0x0601, 0x1f00};
 	LCD_SetGamma(gamma);
 	
 	LCD_CtrlWrite(0x50, 0x0);
@@ -288,6 +261,7 @@ void lcd_init_1b(void) { /* bushing */
 }
 
 void lcd_init_9(void) { /* untested */
+	uint16_t gamma[] = {0, 0x504, 3, 0x303, 0x1210, 0x406, 0x506, 0x707, 0x304, 0x1012};
 	LCD_CtrlWrite(0x00, 0x0);
 	LCD_CtrlWrite(0x00, 0x0);
 	LCD_CtrlWrite(0x00, 0x0);
@@ -301,16 +275,10 @@ void lcd_init_9(void) { /* untested */
 	delay(500);
 	LCD_CtrlWrite(0x60, 0xa700);
 	LCD_CtrlWrite(0x08, 0x405);
-	LCD_CtrlWrite(0x30, 0x0);
-	LCD_CtrlWrite(0x31, 0x504);
-	LCD_CtrlWrite(0x32, 0x3);
-	LCD_CtrlWrite(0x35, 0x303);
-	LCD_CtrlWrite(0x36, 0x1210);
-	LCD_CtrlWrite(0x37, 0x406);
-	LCD_CtrlWrite(0x38, 0x506);
-	LCD_CtrlWrite(0x39, 0x707);
-	LCD_CtrlWrite(0x3c, 0x304);
-	LCD_CtrlWrite(0x3d, 0x1012);
+	
+	/* //--- Adjust the Gamma Curve ---// */
+	LCD_SetGamma(gamma);
+	
 	LCD_CtrlWrite(0x10, 0x2c0);
 	LCD_CtrlWrite(0x11, 0x242);
 	delay(300);
@@ -343,6 +311,7 @@ void lcd_init_9(void) { /* untested */
 }
 
 void lcd_init_11(void) { /* untested */
+	uint16_t gamma[] = {4, 0x307, 2, 0x206, 0x408, 0x507, 0x204, 0x707, 0x405, 0xf02};
 	LCD_CtrlWrite(0xe3, 0x3008);
 	LCD_CtrlWrite(0xe7, 0x12);
 	LCD_CtrlWrite(0xef, 0x1231);
@@ -373,16 +342,10 @@ void lcd_init_11(void) { /* untested */
 	LCD_CtrlWrite(0x29, 0x3);
 	delay(25);
 	LCD_CtrlWrite(0x2b, 0xd);
-	LCD_CtrlWrite(0x30, 0x4);
-	LCD_CtrlWrite(0x31, 0x307);
-	LCD_CtrlWrite(0x32, 0x2);
-	LCD_CtrlWrite(0x35, 0x206);
-	LCD_CtrlWrite(0x36, 0x408);
-	LCD_CtrlWrite(0x37, 0x507);
-	LCD_CtrlWrite(0x38, 0x204);
-	LCD_CtrlWrite(0x39, 0x707);
-	LCD_CtrlWrite(0x3c, 0x405);
-	LCD_CtrlWrite(0x3d, 0xf02);
+	
+	/* //--- Adjust the Gamma Curve ---// */
+	LCD_SetGamma(gamma);
+	
 	LCD_CtrlWrite(0x50, 0x0);
 	LCD_CtrlWrite(0x51, 0xef);
 	LCD_CtrlWrite(0x52, 0x0);
@@ -408,6 +371,7 @@ void lcd_init_11(void) { /* untested */
 }
 
 void lcd_init_12(void) { /* untested */
+	uint16_t gamma[] = {0x204, 0x507, 0x204, 0x107, 0x207, 0x305, 2, 0x305, 0x701, 0x60a};
 	LCD_CtrlWrite(0xe3, 0x3008);
 	LCD_CtrlWrite(0xe7, 0x12);
 	LCD_CtrlWrite(0xef, 0x1231);
@@ -437,16 +401,10 @@ void lcd_init_12(void) { /* untested */
 	delay(50);
 	LCD_CtrlWrite(0x20, 0x0);
 	LCD_CtrlWrite(0x21, 0x0);
-	LCD_CtrlWrite(0x30, 0x204);
-	LCD_CtrlWrite(0x31, 0x507);
-	LCD_CtrlWrite(0x32, 0x204);
-	LCD_CtrlWrite(0x35, 0x107);
-	LCD_CtrlWrite(0x36, 0x207);
-	LCD_CtrlWrite(0x37, 0x305);
-	LCD_CtrlWrite(0x38, 0x2);
-	LCD_CtrlWrite(0x39, 0x305);
-	LCD_CtrlWrite(0x3c, 0x701);
-	LCD_CtrlWrite(0x3d, 0x60a);
+
+	/* //--- Adjust the Gamma Curve ---// */
+	LCD_SetGamma(gamma);
+
 	LCD_CtrlWrite(0x50, 0x0);
 	LCD_CtrlWrite(0x51, 0xef);
 	LCD_CtrlWrite(0x52, 0x0);
@@ -472,6 +430,7 @@ void lcd_init_12(void) { /* untested */
 }
 
 void lcd_init_13(void) { /* untested */
+	uint16_t gamma[] = {0x305, 0x307, 3, 4, 0x302, 0x407, 4, 0x204, 0x307, 0xc};
 	LCD_CtrlWrite(0xe3, 0x3008);
 	LCD_CtrlWrite(0xe7, 0x12);
 	LCD_CtrlWrite(0xef, 0x1231);
@@ -501,16 +460,10 @@ void lcd_init_13(void) { /* untested */
 	delay(50);
 	LCD_CtrlWrite(0x20, 0x0);
 	LCD_CtrlWrite(0x21, 0x0);
-	LCD_CtrlWrite(0x30, 0x305);
-	LCD_CtrlWrite(0x31, 0x307);
-	LCD_CtrlWrite(0x32, 0x3);
-	LCD_CtrlWrite(0x35, 0x4);
-	LCD_CtrlWrite(0x36, 0x302);
-	LCD_CtrlWrite(0x37, 0x407);
-	LCD_CtrlWrite(0x38, 0x4);
-	LCD_CtrlWrite(0x39, 0x204);
-	LCD_CtrlWrite(0x3c, 0x307);
-	LCD_CtrlWrite(0x3d, 0xc);
+	
+	/* //--- Adjust the Gamma Curve ---// */
+	LCD_SetGamma(gamma);
+	
 	LCD_CtrlWrite(0x50, 0x0);
 	LCD_CtrlWrite(0x51, 0xef);
 	LCD_CtrlWrite(0x52, 0x0);
@@ -536,6 +489,7 @@ void lcd_init_13(void) { /* untested */
 }
 
 void lcd_init_14(void) { /* untested */
+	uint16_t gamma[] = {0, 0x406, 4, 0x305, 4, 0x207, 0x103, 0x707, 0x503, 4};
 	LCD_CtrlWrite(0xe3, 0x3008);
 	LCD_CtrlWrite(0xe7, 0x12);
 	LCD_CtrlWrite(0xef, 0x1231);
@@ -565,16 +519,10 @@ void lcd_init_14(void) { /* untested */
 	delay(50);
 	LCD_CtrlWrite(0x20, 0x0);
 	LCD_CtrlWrite(0x21, 0x0);
-	LCD_CtrlWrite(0x30, 0x0);
-	LCD_CtrlWrite(0x31, 0x406);
-	LCD_CtrlWrite(0x32, 0x4);
-	LCD_CtrlWrite(0x35, 0x305);
-	LCD_CtrlWrite(0x36, 0x4);
-	LCD_CtrlWrite(0x37, 0x207);
-	LCD_CtrlWrite(0x38, 0x103);
-	LCD_CtrlWrite(0x39, 0x707);
-	LCD_CtrlWrite(0x3c, 0x503);
-	LCD_CtrlWrite(0x3d, 0x4);
+	
+	/* //--- Adjust the Gamma Curve ---// */
+	LCD_SetGamma(gamma);
+	
 	LCD_CtrlWrite(0x50, 0x0);
 	LCD_CtrlWrite(0x51, 0xef);
 	LCD_CtrlWrite(0x52, 0x0);
@@ -596,6 +544,7 @@ void lcd_init_14(void) { /* untested */
 }
 
 void lcd_init_17(void) { /* untested */
+	uint16_t gamma[] = {0, 0x505, 7, 0x502, 0x807, 7, 0x202, 0x707, 0x205, 0x608};
 	LCD_CtrlWrite(0xe3, 0x3008);
 	LCD_CtrlWrite(0xe7, 0x12);
 	LCD_CtrlWrite(0xef, 0x1231);
@@ -625,16 +574,10 @@ void lcd_init_17(void) { /* untested */
 	delay(50);
 	LCD_CtrlWrite(0x20, 0x0);
 	LCD_CtrlWrite(0x21, 0x0);
-	LCD_CtrlWrite(0x30, 0x0);
-	LCD_CtrlWrite(0x31, 0x505);
-	LCD_CtrlWrite(0x32, 0x7);
-	LCD_CtrlWrite(0x35, 0x502);
-	LCD_CtrlWrite(0x36, 0x807);
-	LCD_CtrlWrite(0x37, 0x7);
-	LCD_CtrlWrite(0x38, 0x202);
-	LCD_CtrlWrite(0x39, 0x707);
-	LCD_CtrlWrite(0x3c, 0x205);
-	LCD_CtrlWrite(0x3d, 0x608);
+	
+	/* //--- Adjust the Gamma Curve ---// */
+	LCD_SetGamma(gamma);
+	
 	LCD_CtrlWrite(0x50, 0x0);
 	LCD_CtrlWrite(0x51, 0xef);
 	LCD_CtrlWrite(0x52, 0x0);
@@ -660,6 +603,7 @@ void lcd_init_17(void) { /* untested */
 }
 
 void lcd_init_18(void) { /* untested */
+	uint16_t gamma[] = {0, 0x507, 4, 0x205, 4, 0x307, 2, 0x707, 0x502, 4};
 	LCD_CtrlWrite(0xe3, 0x3008);
 	LCD_CtrlWrite(0xe7, 0x12);
 	LCD_CtrlWrite(0xef, 0x1231);
@@ -689,16 +633,10 @@ void lcd_init_18(void) { /* untested */
 	delay(50);
 	LCD_CtrlWrite(0x20, 0x0);
 	LCD_CtrlWrite(0x21, 0x0);
-	LCD_CtrlWrite(0x30, 0x0);
-	LCD_CtrlWrite(0x31, 0x507);
-	LCD_CtrlWrite(0x32, 0x4);
-	LCD_CtrlWrite(0x35, 0x205);
-	LCD_CtrlWrite(0x36, 0x4);
-	LCD_CtrlWrite(0x37, 0x307);
-	LCD_CtrlWrite(0x38, 0x2);
-	LCD_CtrlWrite(0x39, 0x707);
-	LCD_CtrlWrite(0x3c, 0x502);
-	LCD_CtrlWrite(0x3d, 0x4);
+	
+	/* //--- Adjust the Gamma Curve ---// */
+	LCD_SetGamma(gamma);
+	
 	LCD_CtrlWrite(0x50, 0x0);
 	LCD_CtrlWrite(0x51, 0xef);
 	LCD_CtrlWrite(0x52, 0x0);
@@ -724,6 +662,7 @@ void lcd_init_18(void) { /* untested */
 }
 
 void lcd_init_20(void) { /* untested */
+	uint16_t gamma[] = {0, 0x406, 4, 0x305, 4, 0x207, 0x103, 0x707, 0x503, 4};
 	LCD_CtrlWrite(0xe3, 0x3008);
 	LCD_CtrlWrite(0xe7, 0x12);
 	LCD_CtrlWrite(0xef, 0x1231);
@@ -753,16 +692,10 @@ void lcd_init_20(void) { /* untested */
 	delay(50);
 	LCD_CtrlWrite(0x20, 0x0);
 	LCD_CtrlWrite(0x21, 0x0);
-	LCD_CtrlWrite(0x30, 0x0);
-	LCD_CtrlWrite(0x31, 0x406);
-	LCD_CtrlWrite(0x32, 0x4);
-	LCD_CtrlWrite(0x35, 0x305);
-	LCD_CtrlWrite(0x36, 0x4);
-	LCD_CtrlWrite(0x37, 0x207);
-	LCD_CtrlWrite(0x38, 0x103);
-	LCD_CtrlWrite(0x39, 0x707);
-	LCD_CtrlWrite(0x3c, 0x503);
-	LCD_CtrlWrite(0x3d, 0x4);
+
+	/* //--- Adjust the Gamma Curve ---// */
+	LCD_SetGamma(gamma);
+
 	LCD_CtrlWrite(0x50, 0x0);
 	LCD_CtrlWrite(0x51, 0xef);
 	LCD_CtrlWrite(0x52, 0x0);
@@ -784,6 +717,7 @@ void lcd_init_20(void) { /* untested */
 }
 
 void lcd_init_23(void) { /* untested */
+	uint16_t gamma[] = {7, 0x604, 7, 0x503, 0x808, 7, 0x301, 7, 0x305, 0x808};
 	LCD_CtrlWrite(0xe3, 0x3008);
 	LCD_CtrlWrite(0xe7, 0x12);
 	LCD_CtrlWrite(0xef, 0x1231);
@@ -813,16 +747,10 @@ void lcd_init_23(void) { /* untested */
 	delay(8000);
 	LCD_CtrlWrite(0x20, 0x0);
 	LCD_CtrlWrite(0x21, 0x0);
-	LCD_CtrlWrite(0x30, 0x7);
-	LCD_CtrlWrite(0x31, 0x604);
-	LCD_CtrlWrite(0x32, 0x7);
-	LCD_CtrlWrite(0x35, 0x503);
-	LCD_CtrlWrite(0x36, 0x808);
-	LCD_CtrlWrite(0x37, 0x7);
-	LCD_CtrlWrite(0x38, 0x301);
-	LCD_CtrlWrite(0x39, 0x7);
-	LCD_CtrlWrite(0x3c, 0x305);
-	LCD_CtrlWrite(0x3d, 0x808);
+	
+	/* //--- Adjust the Gamma Curve ---// */
+	LCD_SetGamma(gamma);
+	
 	LCD_CtrlWrite(0x50, 0x0);
 	LCD_CtrlWrite(0x51, 0xef);
 	LCD_CtrlWrite(0x52, 0x0);
@@ -847,6 +775,7 @@ void lcd_init_23(void) { /* untested */
 }
 
 void lcd_init_25(void) { /* untested */
+	uint16_t gamma[] = {0x301, 0x107, 0x301, 3, 0, 0, 0x706, 0x206, 4, 0};
 	LCD_CtrlWrite(0x01, 0x100);
 	LCD_CtrlWrite(0x02, 0x700);
 	LCD_CtrlWrite(0x03, 0x1030);
@@ -866,16 +795,10 @@ void lcd_init_25(void) { /* untested */
 	LCD_CtrlWrite(0x29, 0x34);
 	delay(1);
 	LCD_CtrlWrite(0x75, 0x0);
-	LCD_CtrlWrite(0x30, 0x301);
-	LCD_CtrlWrite(0x31, 0x107);
-	LCD_CtrlWrite(0x32, 0x301);
-	LCD_CtrlWrite(0x35, 0x3);
-	LCD_CtrlWrite(0x36, 0x0);
-	LCD_CtrlWrite(0x37, 0x0);
-	LCD_CtrlWrite(0x38, 0x706);
-	LCD_CtrlWrite(0x39, 0x206);
-	LCD_CtrlWrite(0x3c, 0x4);
-	LCD_CtrlWrite(0x3d, 0x0);
+	
+	/* //--- Adjust the Gamma Curve ---// */
+	LCD_SetGamma(gamma);
+	
 	delay(1);
 	LCD_CtrlWrite(0x50, 0x0);
 	LCD_CtrlWrite(0x51, 0xef);
@@ -892,6 +815,7 @@ void lcd_init_25(void) { /* untested */
 }
 
 void lcd_init_26_29(void) { /* untested */
+	uint16_t gamma[] = {0, 0x700, 0x707, 7, 0, 0x607, 0x206, 1, 0x700, 0};
 	LCD_CtrlWrite(0x00, 0x1);
 	delay(1600);
 	LCD_CtrlWrite(0x10, 0x130);
@@ -943,16 +867,10 @@ void lcd_init_26_29(void) { /* untested */
 	LCD_CtrlWrite(0x90, 0x0);
 	LCD_CtrlWrite(0x92, 0x0);
 	LCD_CtrlWrite(0x93, 0x0);
-	LCD_CtrlWrite(0x30, 0x0);
-	LCD_CtrlWrite(0x31, 0x700);
-	LCD_CtrlWrite(0x32, 0x707);
-	LCD_CtrlWrite(0x33, 0x7);
-	LCD_CtrlWrite(0x34, 0x0);
-	LCD_CtrlWrite(0x35, 0x607);
-	LCD_CtrlWrite(0x36, 0x206);
-	LCD_CtrlWrite(0x37, 0x1);
-	LCD_CtrlWrite(0x3c, 0x700);
-	LCD_CtrlWrite(0x3d, 0x0);
+
+	/* //--- Adjust the Gamma Curve ---// */
+	LCD_SetGamma(gamma);
+
 	LCD_CtrlWrite(0x10, 0x10b0);
 	LCD_CtrlWrite(0x07, 0x101);
 	delay(8000);
@@ -965,6 +883,7 @@ void lcd_init_26_29(void) { /* untested */
 }
 
 void lcd_init_32(void) { /* untested */
+	uint16_t gamma[] = {0, 0x106, 0, 0x204, 0x160a, 0x707, 0x106, 0x706, 0x402, 0xc0f};
 	LCD_CtrlWrite(0xe7, 0x1014);
 	LCD_CtrlWrite(0x01, 0x100);
 	LCD_CtrlWrite(0x02, 0x200);
@@ -989,16 +908,10 @@ void lcd_init_32(void) { /* untested */
 	LCD_CtrlWrite(0x29, 0x11);
 	LCD_CtrlWrite(0x2b, 0xb);
 	delay(8000);
-	LCD_CtrlWrite(0x30, 0x0);
-	LCD_CtrlWrite(0x31, 0x106);
-	LCD_CtrlWrite(0x32, 0x0);
-	LCD_CtrlWrite(0x35, 0x204);
-	LCD_CtrlWrite(0x36, 0x160a);
-	LCD_CtrlWrite(0x37, 0x707);
-	LCD_CtrlWrite(0x38, 0x106);
-	LCD_CtrlWrite(0x39, 0x706);
-	LCD_CtrlWrite(0x3c, 0x402);
-	LCD_CtrlWrite(0x3d, 0xc0f);
+	
+	/* //--- Adjust the Gamma Curve ---// */
+	LCD_SetGamma(gamma);
+	
 	LCD_CtrlWrite(0x50, 0x0);
 	LCD_CtrlWrite(0x51, 0xef);
 	LCD_CtrlWrite(0x52, 0x0);
@@ -1022,6 +935,7 @@ void lcd_init_32(void) { /* untested */
 }
 
 void lcd_init_33(void) { /* untested */
+	uint16_t gamma[] = {0, 0x507, 1, 0x101, 0x18e0, 0x607, 5, 0x707, 0x100, 0x101};
 	LCD_CtrlWrite(0x2b, 0x3);
 	LCD_CtrlWrite(0x00, 0x1);
 	delay(2);
@@ -1034,16 +948,10 @@ void lcd_init_33(void) { /* untested */
 	delay(2);
 	LCD_CtrlWrite(0x60, 0xa700);
 	LCD_CtrlWrite(0x08, 0x405);
-	LCD_CtrlWrite(0x30, 0x0);
-	LCD_CtrlWrite(0x31, 0x507);
-	LCD_CtrlWrite(0x32, 0x1);
-	LCD_CtrlWrite(0x35, 0x101);
-	LCD_CtrlWrite(0x36, 0x18e0);
-	LCD_CtrlWrite(0x37, 0x607);
-	LCD_CtrlWrite(0x38, 0x5);
-	LCD_CtrlWrite(0x39, 0x707);
-	LCD_CtrlWrite(0x3c, 0x100);
-	LCD_CtrlWrite(0x3d, 0x101);
+	
+	/* //--- Adjust the Gamma Curve ---// */
+	LCD_SetGamma(gamma);
+
 	LCD_CtrlWrite(0x10, 0x290);
 	LCD_CtrlWrite(0x11, 0x247);
 	delay(5);
@@ -1077,6 +985,7 @@ void lcd_init_33(void) { /* untested */
 }
 
 void lcd_init_34(void) { /* untested */
+	uint16_t gamma[] = {0, 0x607, 0x305, 0, 0x1604, 0x204, 1, 0x707, 0, 0xf};
 	LCD_CtrlWrite(0xe3, 0x3008);
 	LCD_CtrlWrite(0xe7, 0x12);
 	LCD_CtrlWrite(0xef, 0x1231);
@@ -1106,16 +1015,10 @@ void lcd_init_34(void) { /* untested */
 	delay(1600);
 	LCD_CtrlWrite(0x20, 0x0);
 	LCD_CtrlWrite(0x21, 0x0);
-	LCD_CtrlWrite(0x30, 0x0);
-	LCD_CtrlWrite(0x31, 0x607);
-	LCD_CtrlWrite(0x32, 0x305);
-	LCD_CtrlWrite(0x35, 0x0);
-	LCD_CtrlWrite(0x36, 0x1604);
-	LCD_CtrlWrite(0x37, 0x204);
-	LCD_CtrlWrite(0x38, 0x1);
-	LCD_CtrlWrite(0x39, 0x707);
-	LCD_CtrlWrite(0x3c, 0x0);
-	LCD_CtrlWrite(0x3d, 0xf);
+	
+	/* //--- Adjust the Gamma Curve ---// */
+	LCD_SetGamma(gamma);
+	
 	LCD_CtrlWrite(0x50, 0x0);
 	LCD_CtrlWrite(0x51, 0xef);
 	LCD_CtrlWrite(0x52, 0x0);
@@ -1137,6 +1040,7 @@ void lcd_init_34(void) { /* untested */
 }
 
 void lcd_init_35(void) { /* untested */
+	uint16_t gamma[] = {4, 0x607, 6, 0x302, 4, 0x107, 1, 0x307, 0x203, 4};
 	LCD_CtrlWrite(0xe3, 0x3008);
 	LCD_CtrlWrite(0xe7, 0x12);
 	LCD_CtrlWrite(0xef, 0x1231);
@@ -1167,16 +1071,10 @@ void lcd_init_35(void) { /* untested */
 	delay(1600);
 	LCD_CtrlWrite(0x20, 0x0);
 	LCD_CtrlWrite(0x21, 0x0);
-	LCD_CtrlWrite(0x30, 0x4);
-	LCD_CtrlWrite(0x31, 0x607);
-	LCD_CtrlWrite(0x32, 0x6);
-	LCD_CtrlWrite(0x35, 0x302);
-	LCD_CtrlWrite(0x36, 0x4);
-	LCD_CtrlWrite(0x37, 0x107);
-	LCD_CtrlWrite(0x38, 0x1);
-	LCD_CtrlWrite(0x39, 0x307);
-	LCD_CtrlWrite(0x3c, 0x203);
-	LCD_CtrlWrite(0x3d, 0x4);
+	
+	/* //--- Adjust the Gamma Curve ---// */
+	LCD_SetGamma(gamma);
+	
 	LCD_CtrlWrite(0x50, 0x0);
 	LCD_CtrlWrite(0x51, 0xef);
 	LCD_CtrlWrite(0x52, 0x0);
@@ -1198,6 +1096,7 @@ void lcd_init_35(void) { /* untested */
 }
 
 void lcd_init_36(void) { /* untested */
+	uint16_t gamma[] = {0, 6, 0x100, 1, 0, 0, 0x406, 0x202, 1, 0};
 	LCD_CtrlWrite(0x01, 0x100);
 	LCD_CtrlWrite(0x02, 0x700);
 	LCD_CtrlWrite(0x03, 0x1030);
@@ -1216,16 +1115,10 @@ void lcd_init_36(void) { /* untested */
 	LCD_CtrlWrite(0x12, 0x89);
 	LCD_CtrlWrite(0x13, 0x1900);
 	LCD_CtrlWrite(0x29, 0x21);
-	LCD_CtrlWrite(0x30, 0x0);
-	LCD_CtrlWrite(0x31, 0x6);
-	LCD_CtrlWrite(0x32, 0x100);
-	LCD_CtrlWrite(0x35, 0x1);
-	LCD_CtrlWrite(0x36, 0x0);
-	LCD_CtrlWrite(0x37, 0x0);
-	LCD_CtrlWrite(0x38, 0x406);
-	LCD_CtrlWrite(0x39, 0x202);
-	LCD_CtrlWrite(0x3c, 0x1);
-	LCD_CtrlWrite(0x3d, 0x0);
+
+	/* //--- Adjust the Gamma Curve ---// */
+	LCD_SetGamma(gamma);
+
 	LCD_CtrlWrite(0x50, 0x0);
 	LCD_CtrlWrite(0x51, 0xef);
 	LCD_CtrlWrite(0x52, 0x0);
@@ -1241,6 +1134,7 @@ void lcd_init_36(void) { /* untested */
 }
 
 void lcd_init_38(void) { /* untested */
+	uint16_t gamma[] = {0, 0x305, 1, 0x302, 0x1f00, 0x204, 0x201, 0x707, 0x202, 0x1f06};
 	LCD_CtrlWrite(0x2b, 0x3);
 	LCD_CtrlWrite(0x00, 0x1);
 	delay(3200);
@@ -1251,16 +1145,10 @@ void lcd_init_38(void) { /* untested */
 	LCD_CtrlWrite(0x60, 0xa700);
 	LCD_CtrlWrite(0x08, 0x405);
 	LCD_CtrlWrite(0x01, 0x100);
-	LCD_CtrlWrite(0x30, 0x0);
-	LCD_CtrlWrite(0x31, 0x305);
-	LCD_CtrlWrite(0x32, 0x1);
-	LCD_CtrlWrite(0x35, 0x302);
-	LCD_CtrlWrite(0x36, 0x1f00);
-	LCD_CtrlWrite(0x37, 0x204);
-	LCD_CtrlWrite(0x38, 0x201);
-	LCD_CtrlWrite(0x39, 0x707);
-	LCD_CtrlWrite(0x3c, 0x202);
-	LCD_CtrlWrite(0x3d, 0x1f06);
+	
+	/* //--- Adjust the Gamma Curve ---// */
+	LCD_SetGamma(gamma);
+	
 	LCD_CtrlWrite(0x10, 0x4c0);
 	LCD_CtrlWrite(0x12, 0x118);
 	LCD_CtrlWrite(0x11, 0x737);
@@ -1295,6 +1183,7 @@ void lcd_init_38(void) { /* untested */
 }
 
 void lcd_init_39(void) { /* untested */
+	uint16_t gamma[] = {0, 0x503, 0x105, 0x300, 0x1f00, 0x306, 0x503, 0x707, 2, 0x1f06};
 	LCD_CtrlWrite(0x2b, 0x3);
 	LCD_CtrlWrite(0x00, 0x1);
 	delay(3200);
@@ -1305,16 +1194,10 @@ void lcd_init_39(void) { /* untested */
 	LCD_CtrlWrite(0x60, 0xa700);
 	LCD_CtrlWrite(0x08, 0x405);
 	LCD_CtrlWrite(0x01, 0x100);
-	LCD_CtrlWrite(0x30, 0x0);
-	LCD_CtrlWrite(0x31, 0x503);
-	LCD_CtrlWrite(0x32, 0x105);
-	LCD_CtrlWrite(0x35, 0x300);
-	LCD_CtrlWrite(0x36, 0x1f00);
-	LCD_CtrlWrite(0x37, 0x306);
-	LCD_CtrlWrite(0x38, 0x503);
-	LCD_CtrlWrite(0x39, 0x707);
-	LCD_CtrlWrite(0x3c, 0x2);
-	LCD_CtrlWrite(0x3d, 0x1f06);
+	
+	/* //--- Adjust the Gamma Curve ---// */
+	LCD_SetGamma(gamma);
+	
 	LCD_CtrlWrite(0x10, 0x4c0);
 	LCD_CtrlWrite(0x12, 0x118);
 	LCD_CtrlWrite(0x11, 0x737);
@@ -1348,6 +1231,7 @@ void lcd_init_39(void) { /* untested */
 }
 
 void lcd_init_40(void) { /* untested */
+	uint16_t gamma[] = {0x402, 6, 0, 0, 0x600, 0x507, 0x707, 0, 0x803, 0x308};
 	LCD_CtrlWrite(0xb0, 0x0);
 	LCD_CtrlWrite(0x00, 0x1);
 	delay(50);
@@ -1357,16 +1241,10 @@ void lcd_init_40(void) { /* untested */
 	delay(50);
 	LCD_CtrlWrite(0x70, 0x3f00);
 	LCD_CtrlWrite(0x08, 0x405);
-	LCD_CtrlWrite(0x30, 0x402);
-	LCD_CtrlWrite(0x31, 0x6);
-	LCD_CtrlWrite(0x32, 0x0);
-	LCD_CtrlWrite(0x33, 0x0);
-	LCD_CtrlWrite(0x34, 0x600);
-	LCD_CtrlWrite(0x35, 0x507);
-	LCD_CtrlWrite(0x36, 0x707);
-	LCD_CtrlWrite(0x37, 0x0);
-	LCD_CtrlWrite(0x38, 0x803);
-	LCD_CtrlWrite(0x39, 0x308);
+	
+	/* //--- Adjust the Gamma Curve ---// */
+	LCD_SetGamma(gamma);
+	
 	LCD_CtrlWrite(0x15, 0x1);
 	LCD_CtrlWrite(0x10, 0x67b0);
 	LCD_CtrlWrite(0x11, 0x47);
