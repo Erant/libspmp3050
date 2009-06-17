@@ -178,50 +178,37 @@ void lcd_init_1(void) { /* untested */
 
 void lcd_init_1b(void) { /* bushing */
 	uint16_t gamma[] = {6, 0x407, 0x200, 7, 0xf07, 0x506, 0x203, 0x607, 0x601, 0x1f00};
-	LCD_CtrlWrite(0x00, 0x1);
-	LCD_CtrlWrite(0x01, 0x100);
-	LCD_CtrlWrite(0x03, 0x1090);
-	LCD_CtrlWrite(0x04, 0x0);
-	LCD_CtrlWrite(0x08, 0x202);
-	LCD_CtrlWrite(0x09, 0x0);
-	LCD_CtrlWrite(0x0a, 0x0);
-/*	LCD_CtrlWrite(0x0c, 0x0);
-	LCD_CtrlWrite(0x0d, 0x0);
-	LCD_CtrlWrite(0x0f, 0x0);
-	LCD_CtrlWrite(0x10, 0x0);
-	LCD_CtrlWrite(0x11, 0x7);
-	LCD_CtrlWrite(0x12, 0x0);
-	LCD_CtrlWrite(0x13, 0x0); */
-	delay(25);
-	LCD_CtrlWrite(0x10, 0x17b0);
-	LCD_CtrlWrite(0x11, 0x1);
-	delay(25);
-	LCD_CtrlWrite(0x12, 0x13c);
-	delay(25);
-	LCD_CtrlWrite(0x13, 0x1300);
-	LCD_CtrlWrite(0x29, 0x4);
-	delay(25);
-	LCD_CtrlWrite(0x20, 0x0);
-	LCD_CtrlWrite(0x21, 0x0);
+	
+	LCD_CtrlWrite(0x00, 0x1);	/* start oscillation */
+	LCD_CtrlWrite(0x01, 0x100);	/* driver output order: 720 .. 1 */
+	LCD_CtrlWrite(0x03, 0x1090);/* pixel order: BGR=1 ORG=1 I/D=01 */
+	LCD_CtrlWrite(0x04, 0x0);	/* disable resizing */
+	LCD_CtrlWrite(0x08, 0x202); /* front porch = 2 lines, back porch = 2 lines */
 
-	/* //--- Adjust the Gamma Curve ---// */
+	LCD_CtrlWrite(0x10, 0x17b0); /* wake up:
+	 								SAP=1 Source output driver enabled
+									BT=7 step-up factor
+									APE=1 Power supply enable
+									AP=3 Current adj = 1:1 */
+	LCD_CtrlWrite(0x11, 0x1);	/* VCiOUT = 0.89 * VCi */
+	LCD_CtrlWrite(0x12, 0x18);	/* VCMR=0, PON=1, VREG1OUT=VCILvl*1.8 */
+	LCD_CtrlWrite(0x13, 0x1300);/* set VCOM = VREG1OUT * 0.94 */
+	LCD_CtrlWrite(0x29, 0x4);	/* set VcomH = VREG1OUT * 0.73 */
+
 	LCD_SetGamma(gamma);
 	LCD_SetGRAM(1);
 	LCD_SetPDisplay(0);
 
-	LCD_CtrlWrite(0x90, 0x40);
-	LCD_CtrlWrite(0x92, 0x0);
-	LCD_CtrlWrite(0x93, 0x3);
-	LCD_CtrlWrite(0x95, 0x110);
-/*	LCD_CtrlWrite(0x97, 0x0);
-	LCD_CtrlWrite(0x98, 0x0); */
-	LCD_CtrlWrite(0x07, 0x1);
-	delay(25);
-	LCD_CtrlWrite(0x07, 0x21);
-	LCD_CtrlWrite(0x07, 0x23);
-	delay(25);
-	LCD_CtrlWrite(0x07, 0x133);
-	delay(200);
+	/* next value effectively sets screen height! */
+	LCD_CtrlWrite(0x90, 0x3c);	/* set clocks/line (internal clock mode)*/
+	LCD_CtrlWrite(0x92, 0x0);	/* set gate non-overlap period = 0 clocks */
+	LCD_CtrlWrite(0x93, 0x3);	/* set source output position = 3 clocks */
+	LCD_CtrlWrite(0x95, 0x110); /* set clocks/line (RGB iface mode) */
+#if 0
+	LCD_CtrlWrite(0x07, 0x1);   /* enable GRAM */
+	LCD_CtrlWrite(0x07, 0x23);  /* output black, screen on */
+#endif
+	LCD_CtrlWrite(0x07, 0x133); /* enable BASEE */
 }
 
 void lcd_init_9(void) { /* untested */
