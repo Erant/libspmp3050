@@ -821,7 +821,6 @@ void lcd_init_26_29(void) { /* untested */
 	LCD_AddrWrite(0x22);
 }
 
-
 void lcd_init_32(void) { /* untested */
 	LCD_CtrlWrite(0xe7, 0x1014);
 	LCD_CtrlWrite(0x01, 0x100);
@@ -1908,7 +1907,11 @@ void lcd_init_22(void) { /* untested */
 	LCD_AddrWrite(0x22);
 }
 
-void lcd_init_5(void) { /* untested */
+/* Init routines for HX8347 controller
+   see https://engineering.purdue.edu/477grp2/klutzke_nb_files/HX8347-A_AN_v01_070726.pdf */
+
+void lcd_init_hx8347a(void) { /* untested */
+	/* set gamma */
 	LCD_CtrlWrite(0x46, 0x95);
 	LCD_CtrlWrite(0x47, 0x51);
 	LCD_CtrlWrite(0x48, 0x0);
@@ -1921,70 +1924,83 @@ void lcd_init_5(void) { /* untested */
 	LCD_CtrlWrite(0x4f, 0x4c);
 	LCD_CtrlWrite(0x50, 0x46);
 	LCD_CtrlWrite(0x51, 0x46);
-	LCD_CtrlWrite(0x02, 0x0);
-	LCD_CtrlWrite(0x03, 0x0);
-	LCD_CtrlWrite(0x04, 0x0);
-	LCD_CtrlWrite(0x05, 0xef);
-	LCD_CtrlWrite(0x06, 0x0);
-	LCD_CtrlWrite(0x07, 0x0);
-	LCD_CtrlWrite(0x08, 0x1);
-	LCD_CtrlWrite(0x09, 0x3f);
-	LCD_CtrlWrite(0x90, 0x7f);
-	LCD_CtrlWrite(0x01, 0x6);
-	LCD_CtrlWrite(0x16, 0x48);
-	LCD_CtrlWrite(0x23, 0x95);
-	LCD_CtrlWrite(0x24, 0x95);
-	LCD_CtrlWrite(0x25, 0xff);
-	LCD_CtrlWrite(0x27, 0x6);
-	LCD_CtrlWrite(0x28, 0x6);
-	LCD_CtrlWrite(0x29, 0x6);
-	LCD_CtrlWrite(0x2a, 0x6);
-	LCD_CtrlWrite(0x2c, 0x6);
-	LCD_CtrlWrite(0x2d, 0x6);
-	LCD_CtrlWrite(0x3a, 0x1);
-	LCD_CtrlWrite(0x3b, 0x1);
-	LCD_CtrlWrite(0x3c, 0xf0);
-	LCD_CtrlWrite(0x3d, 0x0);
+
+	/* 240x320 window setting */
+	LCD_CtrlWrite(0x02, 0x0);  /* column address start2 */
+	LCD_CtrlWrite(0x03, 0x0);  /* column address start1 */
+	LCD_CtrlWrite(0x04, 0x0);  /* column address end2 */
+	LCD_CtrlWrite(0x05, 0xef); /* column address end1 */
+	LCD_CtrlWrite(0x06, 0x0);  /* row address start2 */
+	LCD_CtrlWrite(0x07, 0x0);  /* row address start1 */
+	LCD_CtrlWrite(0x08, 0x1);  /* row address end2 */
+	LCD_CtrlWrite(0x09, 0x3f); /* row address end1 */
+	
+	/* Display setting */
+	LCD_CtrlWrite(0x90, 0x7f); /* SAP=0111 1111 */
+	LCD_CtrlWrite(0x01, 0x6);  /* DMON=0, INVON=1, NORON=1, PTLON=0 */
+	LCD_CtrlWrite(0x16, 0x48); /* MY=0, MX=0, MV=0, ML=1, BGR=0, TEON=0 */
+
+	LCD_CtrlWrite(0x23, 0x95); /* N_DC=1001 0101 */
+	LCD_CtrlWrite(0x24, 0x95); /* PI_DC=1001 0101 */
+	LCD_CtrlWrite(0x25, 0xff); /* I_DC=1111 1111 */
+	
+	LCD_CtrlWrite(0x27, 0x6); /* N_BP=0000 0110 */
+	LCD_CtrlWrite(0x28, 0x6); /* N_FP=0000 0110 */
+	LCD_CtrlWrite(0x29, 0x6); /* PI_BP=0000 0110 */
+	LCD_CtrlWrite(0x2a, 0x6); /* PI_FP=0000 0110 */
+	LCD_CtrlWrite(0x2c, 0x6); /* I_BP=0000 0110 */
+	LCD_CtrlWrite(0x2d, 0x6); /* N_BP=0000 0110 */
+	
+	LCD_CtrlWrite(0x3a, 0x1); /* N_RTN=0000, N_NW=001 */
+	LCD_CtrlWrite(0x3b, 0x1); /* PI_RTN=0000, PI_NW=001 */
+	LCD_CtrlWrite(0x3c, 0xf0); /* I_RTN=1111, I_NW=000 */
+	LCD_CtrlWrite(0x3d, 0x0); /* DIV=00 */
 	delay(20);
 	LCD_CtrlWrite(0x10, 0xa6);
-	LCD_CtrlWrite(0x19, 0x49);
-	LCD_CtrlWrite(0x93, 0xc);
+
+	/* power supply setting */
+	LCD_CtrlWrite(0x19, 0x49); /* CADJ=0100, CUADJ=100(FR:60Hz), OSD_EN=1 */
+	LCD_CtrlWrite(0x93, 0xc);  /* RADJ=1100 */
 	delay(10);
-	LCD_CtrlWrite(0x20, 0x40);
-	LCD_CtrlWrite(0x1d, 0x7);
-	LCD_CtrlWrite(0x1e, 0x0);
-	LCD_CtrlWrite(0x1f, 0x4);
-	LCD_CtrlWrite(0x44, 0x2c);
-	LCD_CtrlWrite(0x45, 0x10);
+	LCD_CtrlWrite(0x20, 0x40); /* BT=0100 */
+	LCD_CtrlWrite(0x1d, 0x7); /* VC1=111 */
+	LCD_CtrlWrite(0x1e, 0x0); /* VC3=000 */
+	LCD_CtrlWrite(0x1f, 0x4); /* VRH=0100 */
+
+	/* VCOM setting */
+	LCD_CtrlWrite(0x44, 0x2c); /* VCM */
+	LCD_CtrlWrite(0x45, 0x10); /* VDV */
 	delay(50);
-	LCD_CtrlWrite(0x1c, 0x6);
+	LCD_CtrlWrite(0x1c, 0x6); /* AP */
 	delay(10);
-	LCD_CtrlWrite(0x43, 0x80);
+	LCD_CtrlWrite(0x43, 0x80); /* set VCOMG=1 */
 	delay(20);
-	LCD_CtrlWrite(0x1b, 0x18);
+	LCD_CtrlWrite(0x1b, 0x18); /* GASENB=0, PON=1, DK=1, XDK=0, VLCD_TRI=0, STB=0 */
 	delay(20);
-	LCD_CtrlWrite(0x1b, 0x10);
+	LCD_CtrlWrite(0x1b, 0x10); /* GASENB=0, PON=1, DK=0, XDK=0, VLCD_TRI=0, STB=0 */
 	delay(20);
-	LCD_CtrlWrite(0x26, 0x4);
+	LCD_CtrlWrite(0x26, 0x4); /* GON=0, DTE=0, D=01 */
 	delay(100);
-	LCD_CtrlWrite(0x26, 0x24);
-	LCD_CtrlWrite(0x26, 0x2c);
+	LCD_CtrlWrite(0x26, 0x24); /* GON=1, DTE=0, D=01 */
+	LCD_CtrlWrite(0x26, 0x2c); /* GON=1, DTE=0, D=11 */
 	delay(100);
-	LCD_CtrlWrite(0x26, 0x3c);
-	LCD_CtrlWrite(0x35, 0x38);
-	LCD_CtrlWrite(0x36, 0x78);
-	LCD_CtrlWrite(0x3e, 0x38);
-	LCD_CtrlWrite(0x40, 0xf);
-	LCD_CtrlWrite(0x41, 0xf0);
-	LCD_CtrlWrite(0x57, 0x2);
+	LCD_CtrlWrite(0x26, 0x3c); /* //GON=1, DTE=1, D=11 */
+	
+	LCD_CtrlWrite(0x35, 0x38); /* EQS=38h */
+	LCD_CtrlWrite(0x36, 0x78); /* EQP=78h */
+	LCD_CtrlWrite(0x3e, 0x38); /* SON=38h */
+	LCD_CtrlWrite(0x40, 0xf); /* GDON=0Fh */
+	LCD_CtrlWrite(0x41, 0xf0); /* GDOFF */
+	LCD_CtrlWrite(0x57, 0x2); /* Test_Mode Enable */
 	LCD_CtrlWrite(0x56, 0x84);
-	LCD_CtrlWrite(0x57, 0x0);
+	LCD_CtrlWrite(0x57, 0x0); /* Test_Mode Disable */
 	LCD_CtrlWrite(0x70, 0x46);
 	delay(200);
 	LCD_AddrWrite(0x22);
 }
 
-void lcd_init_19(void) { /* untested */
+void lcd_init_hx8347b(void) { /* untested */
+	/* set gamma */
 	LCD_CtrlWrite(0x46, 0x34);
 	LCD_CtrlWrite(0x47, 0x43);
 	LCD_CtrlWrite(0x48, 0x44);
@@ -1997,26 +2013,31 @@ void lcd_init_19(void) { /* untested */
 	LCD_CtrlWrite(0x4f, 0x36);
 	LCD_CtrlWrite(0x50, 0x3c);
 	LCD_CtrlWrite(0x51, 0x43);
-	LCD_CtrlWrite(0x02, 0x0);
-	LCD_CtrlWrite(0x03, 0x0);
-	LCD_CtrlWrite(0x04, 0x0);
-	LCD_CtrlWrite(0x05, 0xef);
-	LCD_CtrlWrite(0x06, 0x0);
-	LCD_CtrlWrite(0x07, 0x0);
-	LCD_CtrlWrite(0x08, 0x1);
-	LCD_CtrlWrite(0x09, 0x3f);
-	LCD_CtrlWrite(0x23, 0x95);
-	LCD_CtrlWrite(0x24, 0x95);
-	LCD_CtrlWrite(0x25, 0xff);
-	LCD_CtrlWrite(0x28, 0x2);
-	LCD_CtrlWrite(0x29, 0x2);
-	LCD_CtrlWrite(0x2a, 0x2);
-	LCD_CtrlWrite(0x2b, 0x2);
-	LCD_CtrlWrite(0x2d, 0x2);
-	LCD_CtrlWrite(0x3a, 0x1);
-	LCD_CtrlWrite(0x3b, 0x1);
-	LCD_CtrlWrite(0x3c, 0xf0);
-	LCD_CtrlWrite(0x3d, 0x0);
+
+	/* 240x320 window setting */
+	LCD_CtrlWrite(0x02, 0x0);  /* column address start2 */
+	LCD_CtrlWrite(0x03, 0x0);  /* column address start1 */
+	LCD_CtrlWrite(0x04, 0x0);  /* column address end2 */
+	LCD_CtrlWrite(0x05, 0xef); /* column address end1 */
+	LCD_CtrlWrite(0x06, 0x0);  /* row address start2 */
+	LCD_CtrlWrite(0x07, 0x0);  /* row address start1 */
+	LCD_CtrlWrite(0x08, 0x1);  /* row address end2 */
+	LCD_CtrlWrite(0x09, 0x3f); /* row address end1 */
+	
+	LCD_CtrlWrite(0x23, 0x95); /* N_DC=1001 0101 */
+	LCD_CtrlWrite(0x24, 0x95); /* PI_DC=1001 0101 */
+	LCD_CtrlWrite(0x25, 0xff); /* I_DC=1111 1111 */
+	
+	LCD_CtrlWrite(0x28, 0x2); /* N_FP=0000 0010 */
+	LCD_CtrlWrite(0x29, 0x2); /* PI_BP=0000 0010 */
+	LCD_CtrlWrite(0x2a, 0x2); /* PI_FP=0000 0010 */
+	LCD_CtrlWrite(0x2c, 0x2); /* I_BP=0000 0010 */
+	LCD_CtrlWrite(0x2d, 0x2); /* N_BP=0000 0010 */
+	
+	LCD_CtrlWrite(0x3a, 0x1); /* N_RTN=0000, N_NW=001 */
+	LCD_CtrlWrite(0x3b, 0x1); /* PI_RTN=0000, PI_NW=001 */
+	LCD_CtrlWrite(0x3c, 0xf0); /* I_RTN=1111, I_NW=000 */
+	LCD_CtrlWrite(0x3d, 0x0); /* DIV=00 */
 	delay(20);
 	LCD_CtrlWrite(0x19, 0x7f);
 	delay(20);
@@ -2400,7 +2421,7 @@ void master_lcd_init(int type)
 			lcd_init_4();
 			break;
 		case 5:
-			lcd_init_5();
+			lcd_init_hx8347a();
 			break;
 		case 6:
 			lcd_init_6();
@@ -2447,7 +2468,7 @@ void master_lcd_init(int type)
 			lcd_init_18();
 			break;
 		case 19:
-			lcd_init_19();
+			lcd_init_hx8347b();
 			break;
 		case 20:
 			lcd_init_20();
