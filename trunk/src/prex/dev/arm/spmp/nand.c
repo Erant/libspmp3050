@@ -136,16 +136,16 @@ int NAND_ReadID(char* buf) {
 	return -1;
 }
 
-void NAND_ReadPage(void* buf, int page_no) {
+void NAND_ReadPage(void* buf, int page_no, int offset, int len) {
 	int i = 0;
 	uint8_t* charbuf = (uint8_t*)buf;
 	NAND_WriteCmd(0x00);
-	NAND_WriteAddr(page_no, 0);
+	NAND_WriteAddr(page_no, offset);
 	NAND_WriteCmd(0x30);
 	NAND_WaitCmdBusy();
 	NAND_WaitReadBusy();
 
-	for(; i < nand_info.nand_bytes_per_page + nand_info.nand_spare_per_page; i++) {
+	for(; i < len; i++) {
 		NAND_StrobeRead();
 		/* NAND_WaitReadBusy(); */
 		charbuf[i] = NAND_ReadByte();
@@ -208,7 +208,7 @@ typedef struct {
 static nandrsv_header_t nandrsv_header;
 
 void NAND_ReadRsvBlk(void) {
-	NAND_ReadPage(page_buf, 0);
+	NAND_ReadPage(page_buf, 0, 0, 512);
 	printf("sizeof header = %x page_buf=%x rsv_header=%x\n", sizeof(nandrsv_header),
 		(uint32_t)page_buf, (uint32_t)&nandrsv_header);
 	memcpy(&nandrsv_header, page_buf, sizeof(nandrsv_header));
@@ -258,11 +258,27 @@ static uint16_t NAND_GetLogicalBlkno(uint16_t physical_block) {
 	return (buf[2] << 8 | buf[3])  % nand_info.nand_num_blocks;
 }
 
+/* sorry, feel free to clean this up */
+void compact_table(uint16_t *table, uint16_t table_len) {
+	int i, num_shifted;
+	do {
+		num_shifted = 0;
+		for (i=0; i < table_len - 1; i++)
+			if (table[i] == 0) {
+/*				printf("copy [%x] %d, %d, %d\n", table[i+1], i, i+1, 2*(table_len-i-1)); */
+				memcpy(&table[i], &table[i+1], 2*(table_len - i - 1));
+				table[table_len-1] = 0;
+				table_len--;
+				num_shifted++;
+			}
+	} while (num_shifted > 0);
+}
+
 void NAND_ReadTables(void) {
 	int i, blkno;
 
 	/* read mapTable */
-	NAND_ReadPage(page_buf, 1);
+	NAND_ReadPage(page_buf, 1, 0, 512);
 
 	for (i=0; i < nandrsv_header.nrRsvBlks; i++) {
 		memcpy(&mapTable[i], page_buf + i * 2, 2);
@@ -294,13 +310,13 @@ void NAND_ReadTables(void) {
 
 /* fill out tables from mapTable */
 
-	for (i=1; i < nandrsv_header.nrRsvB; i++) {
+	for (i=0; i < nandrsv_header.nrRsvB; i++) {
 		blkno = NAND_GetLogicalBlkno(mapTable[i]);
 		if (blkno > 0xFF00) continue;
 		translate_rsvB[blkno] = mapTable[i];
 	}
 
-	for (i=1; i < nandrsv_header.nrRsvA; i++) {
+	for (i=0; i < nandrsv_header.nrRsvA; i++) {
 		blkno = NAND_GetLogicalBlkno(mapTable[i+nandrsv_header.nrRsvB]);
 		if (blkno > 0x60) continue;
 		translate_rsvA[blkno] = mapTable[i+nandrsv_header.nrRsvB];
@@ -318,18 +334,40 @@ void NAND_ReadTables(void) {
 
 /* display results */
 	printf("Reserved area translation tables:\n");
-	printf("RsvB: [");
-	for (i=1; i < nandrsv_header.nrRsvB; i++) {
+/*	printf("RsvB: [");
+	for (i=0; i <= nandrsv_header.nrRsvB; i++) {
 		if (translate_rsvB[i] == 0xFFFF) printf("x ");
 		else
-			printf("%04x%s", translate_rsvB[i], (nandrsv_header.nrRsvB - i)>1?" ":"");
+			printf("%04x%s", translate_rsvB[i], (nandrsv_header.nrRsvB - i)>0?" ":"");
+	}
+	printf("]\n"); 
+	
+	printf( "Compacting\n"); */
+	compact_table(translate_rsvB, nandrsv_header.nrRsvB + 1);
+
+	printf("RsvB2: [");
+	for (i=0; i <= nandrsv_header.nrRsvB; i++) {
+		if (translate_rsvB[i] == 0xFFFF) printf("x ");
+		else
+			printf("%04x%s", translate_rsvB[i], (nandrsv_header.nrRsvB - i)>0?" ":"");
 	}
 	printf("]\n");
-	printf("RsvA: [");
-	for (i=1; i < nandrsv_header.nrRsvA; i++) {
+	
+/*	printf("RsvA: [");
+	for (i=0; i <= nandrsv_header.nrRsvA; i++) {
 		if (translate_rsvA[i] == 0xFFFF) printf("x ");
 		else
-			printf("%04x%s", translate_rsvA[i], (nandrsv_header.nrRsvA - i)>1?" ":"");
+			printf("%04x%s", translate_rsvA[i], (nandrsv_header.nrRsvA - i)>0?" ":"");
+	}
+	printf("]\n");
+	printf( "Compacting\n");
+*/	
+	compact_table(translate_rsvA, nandrsv_header.nrRsvA + 1);
+	printf("RsvA: [");
+	for (i=0; i <= nandrsv_header.nrRsvA; i++) {
+		if (translate_rsvA[i] == 0xFFFF) printf("x ");
+		else
+			printf("%04x%s", translate_rsvA[i], (nandrsv_header.nrRsvA - i)>0?" ":"");
 	}
 	printf("]\n");
 	printf("Firmware: [");
@@ -350,17 +388,27 @@ int NAND_FillBlockmap(void) {
 		if (logical_blkno < 0xFF00) {
 /*			printf("logical blkno = %x\n", logical_blkno); */
 			translate_user[logical_blkno] = i;
-			printf("translate_user[%x]=%x\n", logical_blkno, i);
+/*			printf("translate_user[%x]=%x\n", logical_blkno, i); */
 			if (logical_blkno < min_block)
 				min_block = logical_blkno;
 		}
 	}
 	printf("First block is: %d, mapped to: %d\n", min_block, translate_user[min_block]);
+/* fixme hardcoded 200 */
+/*	printf("User: [");
+	for (i=0; i < 200; i++) {
+		printf("%x%s", translate_user[i], (200 - i)>1?" ":"");
+	}
+	printf("]\n"); */
+	
+	compact_table(translate_user, 200);
+	
 	printf("User: [");
 	for (i=0; i < 200; i++) {
 		printf("%x%s", translate_user[i], (200 - i)>1?" ":"");
 	}
 	printf("]\n");
+	
 	return 0;
 }
 
@@ -448,91 +496,65 @@ static int nand_init(void) {
 static int nand_read(device_t dev, char *buf, size_t *nbyte, int sector) {
 	uint8_t* kbuf = kmem_map(buf, *nbyte);
 	size_t bytes_remaining = *nbyte;
-	int i = 0;
-	int block, blkno, page, subpage;
-	int nand_block;
-	/* Temporary addition */
-	/* blkno += 0x3E5000; This is AIMG */
-	/* blkno += 0x30000;  Main FAT partition  */
+	int i = 0, subpage;
+	int logical_block, physical_block;
+	int logical_page, physical_page;
+	int sectors_per_page = nand_info.nand_bytes_per_page / 512;
+	
+	printf("nand_read(%x, %x, %x)\n", (uint32_t)buf, (uint32_t)*nbyte, sector);
 
 	if(!kbuf)
 		return EFAULT;
 
-/*	printf("Reading %d bytes from page %d.\n", bytes_remaining, sector * 512 / nand_info.nand_bytes_per_page);
-	nand_block = (sector * 512) / (nand_info.nand_pages_per_block * nand_info.nand_bytes_per_page); */
+	logical_page = sector / sectors_per_page;
+	logical_block = logical_page / nand_info.nand_pages_per_block;
+	subpage = sector % sectors_per_page;
 
-	printf("Reading %d bytes from page %x.\n", bytes_remaining, sector);
-	nand_block = sector / nand_info.nand_pages_per_block;
+	printf("Reading %d bytes from sector %x (logical block/page/subpage %x/%x/%x).\n", 
+		bytes_remaining, sector, logical_block, logical_page, subpage);
 	
 	if(dev == nand_dev[NAND_RAWDEV]) { /* Main device, no adjusting */
-		block = nand_block;
-		printf("Reading from NAND block %x page %x\n", nand_block, sector % nand_info.nand_pages_per_block);
-		NAND_ReadPage(page_buf, sector);
-		memcpy(kbuf, page_buf, bytes_remaining);
+		physical_block = logical_block;
+		physical_page = logical_page % nand_info.nand_pages_per_block
+			+ physical_block * nand_info.nand_pages_per_block;
+		printf("Reading from physical NAND %x/%x/%x\n", physical_block, physical_page, subpage);
+		NAND_ReadPage(page_buf, physical_page, subpage * 512, 512);
+/*		memcpy(kbuf, page_buf, 512); */
 		return 0;
 	}
 	
 	static uint16_t *translate_table = NULL;
 	
-	if (dev == nand_dev[NAND_USERDEV]) {
-		translate_table = translate_user+4;
-	}
-
-	if (dev == nand_dev[NAND_FWDEV]) {
-		translate_table = translate_fw;
-	}
-
-	if (dev == nand_dev[NAND_RSVADEV]) {
-		translate_table = translate_rsvA+1;
-	}
-
-	if (dev == nand_dev[NAND_RSVBDEV]) {
-		translate_table = translate_rsvB;
-	}
+	if (dev == nand_dev[NAND_USERDEV]) translate_table = translate_user+1;
+	if (dev == nand_dev[NAND_FWDEV])   translate_table = translate_fw;
+	if (dev == nand_dev[NAND_RSVADEV]) translate_table = translate_rsvA;
+	if (dev == nand_dev[NAND_RSVBDEV]) translate_table = translate_rsvB;
 	
 	if (translate_table == NULL) {
 		printf("unknown nand device\n");
 		return -1;
 	}
-	
-	block = translate_table[nand_block];
-	printf("Reading from NAND block %x\n", block);
-	if(block == 0xFFFF){
+	printf("table: %x %x %x\n", translate_table[0], translate_table[1], translate_table[2]);
+	physical_block = translate_table[logical_block];
+	physical_page = logical_page % nand_info.nand_pages_per_block
+		+ physical_block * nand_info.nand_pages_per_block;
+	printf("Reading from physical NAND %x/%x/%x\n", physical_block, physical_page, subpage);
+
+	if (physical_block == 0xFFFF){
 		printf("No mapping found!\n");
 			*nbyte = 0;
 			return -1;
 	}
 
-	int max_bytes_to_read = nand_info.nand_pages_per_block * nand_info.nand_bytes_per_page;
-	page = (sector * 512 / nand_info.nand_bytes_per_page) % nand_info.nand_pages_per_block;
-	subpage = 0;
-
-/*		page = ((sector * 512) % (nand_info.nand_pages_per_block * nand_info.nand_bytes_per_page))
-			/ nand_info.nand_bytes_per_page; */
-	subpage = (sector) % (nand_info.nand_bytes_per_page / 512);
-	max_bytes_to_read -= page * nand_info.nand_bytes_per_page;
-	max_bytes_to_read -= subpage * 512;
-		
-	printf("Reading %d bytes from block %d page %d subpage %d\n",
-		bytes_remaining, block, page, subpage);
+/*	int max_bytes_to_read = nand_info.nand_bytes_per_page - subpage * 512;
 
 	if (max_bytes_to_read < bytes_remaining) {
 		printf("Can't read %d bytes (max = %d)\n", bytes_remaining, max_bytes_to_read);
 		return -1;
-	}
-		
-	while (bytes_remaining > 0) {
-		NAND_ReadPage(page_buf, block * nand_info.nand_pages_per_block + page);
-		int bytes_left_in_page = nand_info.nand_bytes_per_page - subpage * 512;
-		memcpy(kbuf, page_buf + subpage * 512, 
-			bytes_remaining > bytes_left_in_page ? bytes_left_in_page : bytes_remaining);
-		if (bytes_remaining <= bytes_left_in_page) break;
-		bytes_remaining -= bytes_left_in_page;
-		kbuf += bytes_left_in_page;
-		subpage = 0;
-		page++;
-	}
-
+	} */
+	
+	NAND_ReadPage(kbuf, physical_page, subpage * 512, 512);
+/*	memcpy(kbuf, page_buf + subpage * 512, 512); */
 	return 0;
 }
 
