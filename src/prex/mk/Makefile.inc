@@ -69,7 +69,7 @@ DEFS=		-D__$(ARCH)__ -D__$(PLATFORM)__ \
 		-D__ARCH__=$(ARCH) -D__PLATFORM__=$(PLATFORM) \
 		-U$(ARCH) -U$(PLATFORM)
 
-CFLAGS+=	-Os -ffast-math -ansi -pedantic -Wall -Wundef -fno-strict-aliasing \
+CFLAGS+=	-Os -ffast-math -std=c99 -Wall -Wundef -fno-strict-aliasing \
 		-Wstrict-prototypes -Wpointer-arith \
 		$(CONFIG_CFLAGS) $(DEFS) $(ARCHFLAGS)
 
