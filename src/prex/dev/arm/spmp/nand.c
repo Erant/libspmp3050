@@ -15,7 +15,7 @@ static int nand_write(device_t, char *, size_t *, int);
 static int nand_ioctl(device_t, u_long, void *);
 
 #define MAX_PAGE_SIZE		8192
-#define EPIC_SPEW 1
+// #define EPIC_SPEW 1
 
 static int memcmp(uint32_t *buf1, uint32_t *buf2, uint32_t len) {
 	uint32_t i;
@@ -534,16 +534,15 @@ static int nand_init(void) {
 	return 0;
 }
 
-/* todo -- support Rsv devices */
-static int nand_read(device_t dev, char *buf, size_t *nbyte, int sector) {
-	uint8_t* kbuf = kmem_map(buf, *nbyte);
-	size_t bytes_remaining = *nbyte;
+// this function can only read 512 bytes at a time. 
+static int nand_read_sector_internal(device_t dev, char *kbuf, int sector)
+{
 	int i = 0, subpage;
 	int logical_block, physical_block;
 	int logical_page, physical_page;
 	int sectors_per_page = nand_info.nand_bytes_per_page / 512;
 	
-/*	printf("nand_read(%x, %x, %x)\n", (uint32_t)buf, (uint32_t)*nbyte, sector); */
+	printf("nand_read_sector_internal(%x, %x)\n", (uint32_t)kbuf, sector);
 
 	if(!kbuf)
 		return EFAULT;
@@ -553,7 +552,7 @@ static int nand_read(device_t dev, char *buf, size_t *nbyte, int sector) {
 	subpage = sector % sectors_per_page;
 
 	printf("Reading %d bytes from sector %x (logical block/page/subpage %x/%x/%x).\n", 
-		bytes_remaining, sector, logical_block, logical_page, subpage);
+		512, sector, logical_block, logical_page, subpage);
 	
 	if(dev == nand_dev[NAND_RAWDEV]) { /* Main device, no adjusting */
 		physical_block = logical_block;
@@ -561,13 +560,13 @@ static int nand_read(device_t dev, char *buf, size_t *nbyte, int sector) {
 			+ physical_block * nand_info.nand_pages_per_block;
 		printf("Reading from physical NAND %x/%x/%x\n", physical_block, physical_page, subpage);
 		NAND_ReadPage(page_buf, physical_page, subpage * 512, 512);
-/*		memcpy(kbuf, page_buf, 512); */
+		memcpy(kbuf, page_buf, 512);
 		return 0;
 	}
 	
 	static uint16_t *translate_table = NULL;
 	
-	if (dev == nand_dev[NAND_USERDEV]) translate_table = translate_user+2;
+	if (dev == nand_dev[NAND_USERDEV]) translate_table = translate_user;
 	if (dev == nand_dev[NAND_FWDEV])   translate_table = translate_fw;
 	if (dev == nand_dev[NAND_RSVADEV]) translate_table = translate_rsvA;
 	if (dev == nand_dev[NAND_RSVBDEV]) translate_table = translate_rsvB;
@@ -577,17 +576,41 @@ static int nand_read(device_t dev, char *buf, size_t *nbyte, int sector) {
 		return -1;
 	}
 
+
 	physical_block = translate_table[logical_block];
+    printf("logical %x translates to physical %x\n", logical_block, physical_block );
+
 	physical_page = logical_page % nand_info.nand_pages_per_block
 		+ physical_block * nand_info.nand_pages_per_block;
+
+    /* with physical_page +0x100 i'm at
+       nand_user at offset 00000000 maps to /dev/sde at offset 5dd8 0000 - 5dd80200 : 0dfa70913ca785c64b4e092e8c80dfe683029685
+       without i'm at:
+       nand_user at offset 00000000 maps to /dev/sde at offset 5dc8 0000 - 5dc80200 : 127162cc57b62d319023752fa21a0d21717dfb3d
+
+       we want to be at 0, so rationnaly we need to do:
+       - 0x5dc80
+
+       resulting in:
+       nand_user at offset 00000000 maps to /dev/sde at offset 16d00000 - 16d00200 : 8f11e39813065b01d3c7100854b6eb5a332fa2fe
+
+
+       modifying physical_block results in:
+       - 0x1
+       nand_user at offset 00000000 maps to /dev/sde at offset 5dc00000 - 5dc00200 : c435fb619bd3752f93af78d591eea55caa73fb42
+    */
+
+    /*     physical_page -= 0x5dc80; */
+
+    //    physical_page += 0x1;
+
 	printf("Reading from physical NAND %x/%x/%x\n", physical_block, physical_page, subpage);
 
 	if (physical_block == 0xFFFF){
-		printf("No mapping found!\n");
-			*nbyte = 0;
-			return -1;
+      printf("No mapping found!\n");
+      return -1;
 	}
-
+    
 /*	int max_bytes_to_read = nand_info.nand_bytes_per_page - subpage * 512;
 
 	if (max_bytes_to_read < bytes_remaining) {
@@ -598,6 +621,32 @@ static int nand_read(device_t dev, char *buf, size_t *nbyte, int sector) {
 	NAND_ReadPage(kbuf, physical_page, subpage * 512, 512);
 /*	memcpy(kbuf, page_buf + subpage * 512, 512); */
 	return 0;
+
+}
+
+
+/* todo -- support Rsv devices */
+static int nand_read(device_t dev, char *buf, size_t *nbyte, int sector) 
+{
+  uint8_t* kbuf = kmem_map(buf, *nbyte);
+  size_t bytes_remaining = *nbyte;
+
+  printf("nand_read(%x, %x, %x)\n", (uint32_t)kbuf, (uint32_t)*nbyte, sector);
+
+  while( bytes_remaining > 0 )
+    {
+      int r = nand_read_sector_internal( dev, kbuf, sector );
+      if (r==-1)
+        {
+          *nbyte = 0;
+          return -1;
+        }
+
+      kbuf += 512;
+      bytes_remaining -= 512;
+      sector++;
+    }
+  return 0;
 }
 
 static int nand_write(device_t dev, char *buf, size_t *nbyte, int blkno) {
@@ -607,6 +656,7 @@ static int nand_write(device_t dev, char *buf, size_t *nbyte, int blkno) {
 static int nand_ioctl(device_t dev, u_long cmd, void *arg) {
 	switch(cmd) {
 		case NANDIOC_GET_INFO:
+          printf("nand_get_info called\n");
                 if (umem_copyout(&nand_info, arg, sizeof(nand_info)))
                         return EFAULT;
 			return 0;
