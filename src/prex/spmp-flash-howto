@@ -1,0 +1,18 @@
+
+Ok with the latest nand.c, this works for me:
+
+  create an AR archive:
+
+     ar rcS flashimg.a ./usr/sample/lrzsz/lrz  (and a bunch of other files)
+     
+  boot the device with original firmware, assuming it maps to /dev/sde
+
+    cat flashimg.a /dev/zero > /dev/sde
+
+  break after you feel you have enough padding (hah, yeah, about 15 seconds i guess.. we really need to figure out how to sync)
+
+    then reboot the device in prex and run:
+
+    mount /dev/nand_user /mnt/floppy arfs
+
+et voila, a working /mnt/floppy with the files you just put there!
