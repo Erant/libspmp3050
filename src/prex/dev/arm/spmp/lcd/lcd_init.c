@@ -261,7 +261,7 @@ void lcd_init_11(void) { /* untested */
 	delay(1000);
 	LCD_CtrlWrite(0x01, 0x100);
 	LCD_CtrlWrite(0x02, 0x700);
-	LCD_CtrlWrite(0x03, 0x1030);
+	LCD_CtrlWrite(0x03, 0x1020);
 	LCD_CtrlWrite(0x04, 0x0);
 	LCD_CtrlWrite(0x08, 0x207);
 	LCD_CtrlWrite(0x09, 0x0);

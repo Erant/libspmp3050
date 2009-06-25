@@ -240,16 +240,29 @@ typedef unsigned long   word;
 #define rPBDAT          (*(volatile unsigned *)0x1560000c)
 #define rPBUP           (*(volatile unsigned *)0x15600010)
 
-#define BUTTON_LEFT     1
-#define BUTTON_DOWN     2
-#define BUTTON_RIGHT    4
-#define BUTTON_UP       8
-#define BUTTON_L       16
-#define BUTTON_B       32
-#define BUTTON_A       64
-#define BUTTON_R      128
-#define BUTTON_START  256
-#define BUTTON_SELECT 512
+#define BUT_LEFT		0x1
+#define BUT_RIGHT		0x2
+#define BUT_UP			0x4
+#define BUT_DOWN		0x8
+#define	BUT_A			0x10
+#define BUT_B			0x20
+#define	BUT_X			0x40
+#define	BUT_OK			0x80
+#define	BUT_VOL_UP		0x100
+#define	BUT_VOL_DOWN	0x200
+#define	BUT_ESC			0x400
+#define BUT_PICTURE		0x800
+
+#define BUTTON_LEFT     BUT_LEFT
+#define BUTTON_DOWN     BUT_DOWN
+#define BUTTON_RIGHT    BUT_RIGHT
+#define BUTTON_UP       BUT_UP
+#define BUTTON_L		BUT_X
+#define BUTTON_B		BUT_OK
+#define BUTTON_A		BUT_A
+#define BUTTON_R		BUT_B
+#define BUTTON_START	BUT_ESC
+#define BUTTON_SELECT	BUT_VOL_DOWN
 
 #define rPCCON          (*(volatile unsigned *)0x15600014)
 #define rPCDAT          (*(volatile unsigned *)0x15600018)

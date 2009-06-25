@@ -122,6 +122,34 @@ static uint32_t translate_buttons(uint32_t val){
 	return ret;
 }
 
+uint32_t scan_range(){
+	uint32_t out = 0x1, in = 0;
+	for(int i = 0; i < 32; i++){
+		GPIO_A_OUT = ~out | 0x2;
+		GPIO_A_DIR = ~out | 0x2;
+		GPIO_A_PULL_ENABLE = out;
+		GPIO_A_PULL_SELECT = ~out;
+		for(volatile int j = 0; j < 1000; j++);
+		in |= GPIO_A_IN & out;
+		out = out << 1;
+	}
+	return in;
+}
+
+void find_mah_buttonz(){
+	uint32_t val = 0, prev_val = 0;
+	printf("Welcome to the advanced button finder program.\n");
+	printf("Scanning...\n");
+
+	while(1){
+		val = scan_range();
+		if(val != prev_val)
+			printf("0x%08X\n", val);
+		prev_val = val;
+	}
+
+}
+
 static int but_read(device_t dev, char *buf, size_t *nbyte, int blkno)
 {
 	uint32_t buttons = read_button_array();
@@ -198,5 +226,6 @@ static int but_init(void)
 	device_ioctl(gpio_dev, GPIO_IOC_SET, buf);
 */
 	but_map_size = 0;
+	//find_mah_buttonz();
 	return 0;
 }
