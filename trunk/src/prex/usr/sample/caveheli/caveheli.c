@@ -14,6 +14,13 @@
 #include "coin.c"
 #include "copter.c"
 #include "music.c"
+#include "rand.c"
+
+/*
+extern unsigned long genrand_int32(void);
+extern void init_genrand(unsigned long s);
+*/
+
 
 void drawcave(int x, int y, int size, u16 *framebuf);
 void box(int x, int y, int xx, int yy, u16 color, u16 *framebuf);
@@ -28,6 +35,9 @@ int a1=0,a2=0;
 int score=0;
 
 device_t lcddev;
+device_t buttonsdev;
+
+#define rand()	genrand_int32()
 
 void gp_clearFramebuffer16(void* buf, u16 val){
 	memset(buf, val, 320 * 240 * 2);
@@ -40,24 +50,87 @@ void gp_setFramebuffer(void* buf, int unk){
 }
 
 int gp_getButton(){
-	return 0;
+	uint32_t buttons;
+	device_read(buttonsdev, &buttons, sizeof(buttons), 0);
+	return buttons;
 }
 
 void gp_Reset(){
 	exit(0);
 }
 
-void gp_drawLine16(int x0, int y0, int x1, int y1, u16 color, void* fb){
-	
+#define SWAP(x, y) (x ^= y ^= x ^= y)
+void gp_drawLine16(int x0, int y0, int x1, int y1, u16 color, void* fb) {
+   int Dx = x1 - x0; 
+   int Dy = y1 - y0;
+   int steep = (abs(Dy) >= abs(Dx));
+   if (steep) {
+       SWAP(x0, y0);
+       SWAP(x1, y1);
+       // recompute Dx, Dy after swap
+       Dx = x1 - x0;
+       Dy = y1 - y0;
+   }
+   int xstep = 1;
+   if (Dx < 0) {
+       xstep = -1;
+       Dx = -Dx;
+   }
+   int ystep = 1;
+   if (Dy < 0) {
+       ystep = -1;		
+       Dy = -Dy; 
+   }
+   int TwoDy = 2*Dy; 
+   int TwoDyTwoDx = TwoDy - 2*Dx; // 2*Dy - 2*Dx
+   int E = TwoDy - Dx; //2*Dy - Dx
+   int y = y0;
+   int xDraw, yDraw;	
+   for (int x = x0; x != x1; x += xstep) {		
+       if (steep) {			
+           xDraw = y;
+           yDraw = x;
+       } else {			
+           xDraw = x;
+           yDraw = y;
+       }
+       // plot
+       gp_drawPixel16(xDraw, yDraw, color, fb);
+       // next
+       if (E > 0) {
+           E += TwoDyTwoDx; //E += 2*Dy - 2*Dx;
+           y = y + ystep;
+       } else {
+           E += TwoDy; //E += 2*Dy;
+       }
+   }
 }
+
 
 void gp_drawSpriteT(void* buf, int x, int y, void* fb, u16 transparent, int x_size, int y_size){
-
+	uint16_t* sprite = (uint16_t*)buf;
+	for(int xi = 0; xi < x_size; xi++){
+		for(int yi = 0; yi < y_size; yi++){
+			if(sprite[(yi * x_size) + xi] != transparent)
+				gp_drawPixel16(x + xi, y + yi, sprite[(yi * x_size) + xi], fb);
+		}
+	}
 }
 
-int main(void){
+int main(int argc, char* argv[]){
 	int x;
+	int lcd = 11;
 	device_open("lcd", 0, &lcddev);
+	device_open("buttons", 0, &buttonsdev);
+
+/* Full speed ahead! Aye aye cap'n! */
+	*((uint8_t*)0x10000122) = 1;	
+	*((uint8_t*)0x10000123) = 3;
+
+	if(argc > 1)
+		sscanf(argv[1], "%d", &lcd);
+	
+	device_ioctl(lcddev, LCDIOC_INIT, lcd);
 	device_ioctl(lcddev, LCDIOC_SET_BACKLIGHT, 1);
 	fb[0] = (u16*)malloc(320 * 240 * 2);
 	fb[1] = (u16*)malloc(320 * 240 * 2);
@@ -89,7 +162,8 @@ int title(void)
 	int gmspd=0;
 	int penalty=10;
 	int nofire=0;
-	unsigned char scroller[]="                                        Cave Copter! Written by donskeeto, ported to the awesome SPMP platform by Erant.        ";
+	#define SCROLLER_LENGTH sizeof(scroller)
+	unsigned char scroller[]="                                        Cave Copter! Written by donskeeto, ported to the awesome SPMP platform by Erant.                                       ";
 
 	gmmode=a1;
 	gmspd=a2;
@@ -160,11 +234,13 @@ int title(void)
 			{
 				menu++;
 				penalty=5;
+				printf("Down\n");
 			}
 			if(gp_getButton()&BUTTON_UP && menu>0)
 			{
 				menu--;
 				penalty=5;
+				printf("Up\n");
 			}
 			if(menu==0)
 			{
@@ -172,11 +248,13 @@ int title(void)
 				{
 					gmmode++;
 					penalty=5;
+					printf("Right");
 				}
 				if(gp_getButton()&BUTTON_LEFT && gmmode>0)
 				{
 					gmmode--;
 					penalty=5;
+					printf("Left");
 				}
 			}
 			if(menu==1)
@@ -185,11 +263,13 @@ int title(void)
 				{
 					gmspd++;
 					penalty=5;
+					printf("Right");
 				}
 				if(gp_getButton()&BUTTON_LEFT && gmspd>0)
 				{
 					gmspd--;
 					penalty=5;
+					printf("Left");
 				}
 			}
 			if(menu==2)
@@ -197,6 +277,7 @@ int title(void)
 				if(gp_getButton()&BUTTON_A)
 				{
 					nofire=1;
+					printf("A");
 				}
 			}
 
@@ -209,7 +290,7 @@ int title(void)
 		{
 			chscr=0;
 			scrpos++;
-			if (scrpos==700) scrpos=0;
+			if (scrpos == SCROLLER_LENGTH) scrpos=0;
 		}
 		if (gp_getButton()&BUTTON_L && gp_getButton()&BUTTON_R && gp_getButton()&BUTTON_START && gp_getButton()&BUTTON_SELECT) gp_Reset();
 		if (penalty>0) penalty--;
@@ -240,6 +321,12 @@ void game(int gm)
 	int coinx=-40, coiny;
 	int hit=0;
 	unsigned char xscr[20];
+	
+	unsigned long time;
+	sys_time(&time);
+
+	init_genrand(time);
+
 	/* clear cave */
 	score=0;	
 	a1=gm/10;
@@ -405,18 +492,31 @@ void drawcave(int x, int y, int size, u16 *framebuf)
 
 void box(int x, int y, int xx, int yy, u16 color, u16 *framebuf)
 {
-	int i;
+/*	int i;
 	for(i=y;i<=yy;i++)
 	{
 		gp_drawLine16(x,i,xx,i,color,framebuf);
+	}
+*/
+	if(xx > 320) 
+		xx = 320;
+
+	if(xx < 0) 
+		x = 0;
+	
+	int x_size = (xx - x) + 1;
+	int y_size = (yy - y) + 1;
+
+	for(int xi = 0; xi < x_size; xi++){
+		for(int yi = 0; yi < y_size; yi++){
+			gp_drawPixel16(x + xi, y + yi, color, framebuf);
+		}
 	}
 }
 
 u16 px(int x, int y, u16 *framebuffer)
 {
-	u16 col;
-	col=framebuffer[(239-y)+(240*x)];
-	return(col);
+	return framebuffer[y + (240 * x)];
 }
 
 void redbar(int y, u16 *framebuffer)

@@ -38,6 +38,7 @@ int
 main(int argc, char *argv[])
 {
   int x,y;
+  int cpu_mul = 1, mem_mul = 3;
   struct info_timer info;
  	u_long start, end;
 
@@ -48,6 +49,24 @@ main(int argc, char *argv[])
       printf("NO LCD device driver in /dev/lcd, omgwtf\n");
 
  again:
+
+  switch(argc){
+	case 1:
+		break;
+	case 3:
+		sscanf(argv[2], "%d", &mem_mul);
+	case 2:
+		sscanf(argv[1], "%d", &cpu_mul);
+  }
+  if(cpu_mul < 1)
+	cpu_mul = 1;
+
+  if(mem_mul < 3)
+	mem_mul = 3;
+
+/*  *((uint8_t*)0x10000122) = cpu_mul; 
+  *((uint8_t*)0x10000123) = mem_mul;*/
+  *((uint8_t*)0x10000136) = 0xF;
 
   sys_info(INFO_TIMER, &info);
   printf("Hello World!\n");
@@ -100,12 +119,12 @@ main(int argc, char *argv[])
         }
 
       }
-        printf("\n");
+      printf("\n");
 }
 
-  sys_time(&end);
-
-  printf("mandelbrot took %d ticks\n", end-start );
+  sys_time(&end); 
+  *((uint32_t*)0x10000136) = 0xB;
+  printf("\n\n\nmandelbrot took %d ticks\n", end-start );
   {
     int time = 1000*(end-start) / info.hz;
     printf("which should roughly be %d milliseconds\n", time );
