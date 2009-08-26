@@ -1,9 +1,0 @@
-/*
- * Automatically generated file. Don't edit
- */
-AUTODETECT = 0 ;
-LOADER_BASE = 0x24010000 ;
-KERNEL_BASE = 0xA4080000 ;
-DRIVER_BASE = AUTODETECT ;
-SYSPAGE_BASE = 0x80000000 ;
-BOOTIMG_BASE = 0xA4012000 ;
