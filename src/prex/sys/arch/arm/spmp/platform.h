@@ -114,7 +114,6 @@ typedef unsigned long uint32_t;
 #define TIMER_REPEAT			0x10
 
 /*--- IRQ ---*/
-
 #define IRQ_FLAG				(*(volatile uint64_t*)(IO_BASE + 0x10C0))
 #define IRQ_FLAG_LO				(*(volatile uint32_t*)(IO_BASE + 0x10C0))
 #define IRQ_FLAG_HI				(*(volatile uint32_t*)(IO_BASE + 0x10C4))
@@ -152,5 +151,9 @@ typedef unsigned long uint32_t;
 
 #define NAND_STATUS2			(*(volatile uint8_t*)(NAND_BASE + 0x24))
 #define NAND_STATUS_CMD_READY	0x01
+
+/*--- USB ---*/
+#define USB_BASE                (IO_BASE + 0x5000)
+
 
 #endif

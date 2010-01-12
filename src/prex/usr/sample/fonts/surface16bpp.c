@@ -54,11 +54,11 @@ static void spmp_surface16bpp_drawChar(spmp_surface * surface, spmp_bitmapFontCh
 			c = *(char_data++);
 			src_pixel = *(framebuffer);
 
-			dr = ((src_pixel & 31)*(256-c) + r*c) >> 8;
+			db = ((src_pixel & 31)*(256-c) + b*c) >> 8;
 			dg = (((src_pixel>>5) & 63)*(256-c) + g*c) >> 8;
-			db = (((src_pixel>>11) & 31)*(256-c) + b*c) >> 8;
+			dr = (((src_pixel>>11) & 31)*(256-c) + r*c) >> 8;
 
-			*(framebuffer) = dr | (dg<<5) | (db<<11);
+			*(framebuffer) = db | (dg<<5) | (dr<<11);
 			framebuffer++;
 		}
 		framebuffer += skip;

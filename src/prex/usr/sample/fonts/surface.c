@@ -25,6 +25,8 @@ void spmp_surface_drawString(spmp_surface * surface, unsigned char *str, int x, 
 		} else
 			pos+=font->space_advance;
 
+		pos += font->tracking;
+
 		str++;
 	}
 

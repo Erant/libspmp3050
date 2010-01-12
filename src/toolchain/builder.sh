@@ -37,7 +37,7 @@ echo "Unpacking gcc"
 tar xzf gcc-4.3.3.tar.gz || exit
 cd "$BUILDPATH/gcc" || exit
 echo "Configuring gcc"
-../../gcc-4.3.3/configure --prefix="$INSTALLPATH" --target=arm-elf --with-gnu-as --with-gnu-ld --with-cpu=arm926ej-s --disable-nls --enable-languages=c --disable-libssp
+../../gcc-4.3.3/configure --prefix="$INSTALLPATH" --target=arm-elf --with-gnu-as --with-gnu-ld --with-cpu=arm926ej-s --disable-nls --enable-languages=c --disable-libssp --enable-c99
 echo "Building gcc"
 make -j${CORES} || exit
 echo "Installing gcc"

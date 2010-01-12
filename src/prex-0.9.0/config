@@ -1,0 +1,1 @@
+./configure --target=arm-spmp --cross-prefix=/home/niels/src/libspmp3050/src/toolchain/install/bin/arm-elf-

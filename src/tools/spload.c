@@ -8,7 +8,7 @@
  */
 
 
-// gcc -I../libusb-1.0.0/libusb -L../libusb-1.0.0/libusb/.libs -lusb-1.0 -lpthread spload.c -o spload
+// gcc -Ilibusb-1.0.0/libusb -Llibusb-1.0.0/libusb/.libs -lusb-1.0 -lpthread spload.c -o spload
 // export LD_LIBRARY_PATH=~/dev/spmp305x/code/libusb-1.0.0/libusb/.libs/
 
 #include <stdlib.h>
@@ -16,7 +16,7 @@
 #include <string.h>
 #include <stdint.h>
 
-#include <libusb-1.0/libusb.h>
+#include <libusb.h>
 
 #define	USB_TIMEOUT	512
 
