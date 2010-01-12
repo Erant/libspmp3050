@@ -4,6 +4,7 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.font.TextLayout;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -50,8 +51,8 @@ public class BitmapFontExtractor
 		public byte[] data;
 		public char c;
 		public int w, h;
-		public int advance, ascent;			
-		
+		public int advance, ascent;
+	
 	}
 	
 	private Glyph extractCharacter(char c)

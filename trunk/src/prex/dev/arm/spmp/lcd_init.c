@@ -2490,6 +2490,8 @@ void lcd_init_default(void)
 
 void master_lcd_init(int type)
 {
+	LCD_Init_Inoop();
+	return;
 
 	switch(type) {
 		case 1:

@@ -18,6 +18,7 @@ struct _spmp_bitmapFont
 	int font_size;
 	int space_advance;
 	int leading;
+	int tracking;
 	spmp_bitmapFontCharacter * characters;
 	unsigned char * data;
 };
@@ -35,5 +36,6 @@ spmp_bitmapFont * spmp_bitmapFont_create(void);
 void spmp_bitmapFont_destroy(spmp_bitmapFont * font);
 int spmp_bitmapFont_load(spmp_bitmapFont * font, const char *filename);
 spmp_bitmapFontCharacter * spmp_bitmapFont_findCharacter(spmp_bitmapFont * font, char c);
+int spmp_bitmapFont_stringWidth(spmp_bitmapFont * font, const char * str);
 
 #endif

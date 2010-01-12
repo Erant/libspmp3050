@@ -11,7 +11,7 @@ boottasks	$(SRCDIR)/usr/server/proc/proc
 boottasks	$(SRCDIR)/usr/server/fs/fs
 boottasks	$(SRCDIR)/usr/server/exec/exec
 #boottasks	$(SRCDIR)/usr/sample/lcd/lcd
-boottasks	$(SRCDIR)/usr/sample/hello/hello
+#boottasks	$(SRCDIR)/usr/sample/hello/hello
 
 #boottasks	$(SRCDIR)/usr/sample/alarm/alarm
 #boottasks	$(SRCDIR)/usr/sample/bench/bench
@@ -57,10 +57,17 @@ bootfiles	$(SRCDIR)/usr/bin/init/init
 bootfiles	$(SRCDIR)/usr/bin/cmdbox/cmdbox
 bootfiles	$(SRCDIR)/doc/LICENSE
 bootfiles	$(SRCDIR)/usr/sample/hello/hello
-bootfiles	$(SRCDIR)/usr/sample/gpio/gpio
-bootfiles	$(SRCDIR)/usr/sample/xxd/xxd
-bootfiles	$(SRCDIR)/usr/sample/lcd/lcd
-bootfiles	$(SRCDIR)/usr/sample/buttons/buttons
+#bootfiles	$(SRCDIR)/usr/sample/gpio/gpio
+#bootfiles	$(SRCDIR)/usr/sample/xxd/xxd
+#bootfiles	$(SRCDIR)/usr/sample/lcd/lcd
+bootfiles	$(SRCDIR)/usr/sample/fonts/fonts
+bootfiles	$(SRCDIR)/usr/sample/fonts/goudy32.bfnt
+bootfiles	$(SRCDIR)/usr/sample/fonts/italic24.bfnt
+bootfiles	$(SRCDIR)/usr/sample/fonts/mono24.bfnt
+bootfiles	$(SRCDIR)/usr/sample/fonts/mono16.bfnt
+bootfiles	$(SRCDIR)/usr/sample/fonts/mono12.bfnt
+bootfiles	$(SRCDIR)/usr/sample/fonts/mono8.bfnt
+#bootfiles	$(SRCDIR)/usr/sample/buttons/buttons
 #bootfiles	$(SRCDIR)/usr/sample/caveheli/caveheli
 
 #bootfiles	$(SRCDIR)/usr/test/args/args

@@ -74,6 +74,9 @@ int spmp_bitmapFont_load(spmp_bitmapFont * font, const char *filename)
 
 	fclose(file);
 
+	/* default tracking to 0 */
+	font->tracking = 0;
+
 	return FONT_LOAD_SUCCESS;
 
 }
@@ -88,4 +91,26 @@ spmp_bitmapFontCharacter * spmp_bitmapFont_findCharacter(spmp_bitmapFont * font,
 
 	/* not found, return null */
 	return NULL;
+}
+
+int spmp_bitmapFont_stringWidth(spmp_bitmapFont * font, const char * str)
+{
+	int ret = 0;
+	spmp_bitmapFontCharacter * character;
+
+	while (*str!=0)
+	{
+		character = spmp_bitmapFont_findCharacter(font, *str);
+		if (character!=NULL)
+		{
+			ret += character->advance;
+		} else
+			ret += font->space_advance;
+
+		ret += font->tracking;
+
+		str++;
+	}
+
+	return ret;
 }
