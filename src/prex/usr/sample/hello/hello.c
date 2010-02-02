@@ -64,9 +64,12 @@ main(int argc, char *argv[])
   if(mem_mul < 3)
 	mem_mul = 3;
 
+
+  /* these should set the cpu and memory speed, but they screw up my serial, so i've removed them */
+
 /*  *((uint8_t*)0x10000122) = cpu_mul; 
-  *((uint8_t*)0x10000123) = mem_mul;*/
-  *((uint8_t*)0x10000136) = 0xF;
+  *((uint8_t*)0x10000123) = mem_mul;
+  *((uint8_t*)0x10000136) = 0xF;  */
 
   sys_info(INFO_TIMER, &info);
   printf("Hello World!\n");
