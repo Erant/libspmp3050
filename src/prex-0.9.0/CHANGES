@@ -1,0 +1,8 @@
+
+prex 0.9.0 porting notes:
+
+- modified spload to execute code at arbitrary address (0x24010000 here)
+
+- changed some offset in "conf/arm/spmp" config file (memory BOOTIMG_BASE 0x24012000)
+- minor fixes in "bsp/hal/arm/spmp.diag.c"
+- added uart driver for console (not yet working)
