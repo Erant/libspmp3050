@@ -162,5 +162,5 @@ interrupt_init(void)
 	IRQ_MASK = 0;
 	IRQ_ENABLE = 0;
 
-//	interrupt_enable();
+	interrupt_enable();
 }
