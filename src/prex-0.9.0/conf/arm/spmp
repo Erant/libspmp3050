@@ -16,7 +16,7 @@ makeoptions	ASFLAGS+= -march=armv5te
 memory		LOADER_TEXT	0x24010000
 memory		KERNEL_TEXT	0x24100000
 memory		SYSPAGE_BASE	0x24000000
-memory		BOOTIMG_BASE	0x24014000
+memory		BOOTIMG_BASE	0x24012000
 
 #
 # Tunable paramters
@@ -77,9 +77,10 @@ options 	ARFS		# Archive file system
 device		pm		# Power management
 device		cons		# System console
 device		serial		# Logical serial
-device  	pl011		# ARM PrimeCell PL011 UART (P:serial)
-device		rtc		# Logical RTC
-device 		pl030		# ARM PrimeCell PL030 RTC
+device		spmpuart
+#device  	pl011		# ARM PrimeCell PL011 UART (P:serial)
+#device		rtc		# Logical RTC
+#device 		pl030		# ARM PrimeCell PL030 RTC
 device		null		# NULL device
 device		zero		# Zero device
 device		ramdisk		# RAM disk
