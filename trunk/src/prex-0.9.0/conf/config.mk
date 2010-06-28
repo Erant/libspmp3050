@@ -6,21 +6,21 @@ ARCH=arm
 PLATFORM=spmp
 PROFILE=spmp
 _GNUC_=1
-CC=/home/niels/src/libspmp3050/src/toolchain/install/bin/arm-elf-gcc
-CPP=/home/niels/src/libspmp3050/src/toolchain/install/bin/arm-elf-cpp
-AS=/home/niels/src/libspmp3050/src/toolchain/install/bin/arm-elf-as
-LD=/home/niels/src/libspmp3050/src/toolchain/install/bin/arm-elf-ld
-AR=/home/niels/src/libspmp3050/src/toolchain/install/bin/arm-elf-ar
-OBJCOPY=/home/niels/src/libspmp3050/src/toolchain/install/bin/arm-elf-objcopy
-OBJDUMP=/home/niels/src/libspmp3050/src/toolchain/install/bin/arm-elf-objdump
-STRIP=/home/niels/src/libspmp3050/src/toolchain/install/bin/arm-elf-strip
+CC=arm-elf-gcc
+CPP=arm-elf-cpp
+AS=arm-elf-as
+LD=arm-elf-ld
+AR=arm-elf-ar
+OBJCOPY=arm-elf-objcopy
+OBJDUMP=arm-elf-objdump
+STRIP=arm-elf-strip
 GCCFLAGS+= -fno-stack-protector
-GCCFLAGS+=-march=armv5te
-ASFLAGS+=-march=armv5te
+GCCFLAGS+= -march=armv5te
+ASFLAGS+= -march=armv5te
 CONFIG_LOADER_TEXT=0x24010000
 CONFIG_KERNEL_TEXT=0x24100000
 CONFIG_SYSPAGE_BASE=0x24000000
-CONFIG_BOOTIMG_BASE=0x24014000
+CONFIG_BOOTIMG_BASE=0x24012000
 CONFIG_HZ=1000
 CONFIG_TIME_SLICE=5
 CONFIG_OPEN_MAX=16
@@ -38,9 +38,7 @@ CONFIG_ARFS=y
 CONFIG_PM=y
 CONFIG_CONS=y
 CONFIG_SERIAL=y
-CONFIG_PL011=y
-CONFIG_RTC=y
-CONFIG_PL030=y
+CONFIG_SPMPUART=y
 CONFIG_NULL=y
 CONFIG_ZERO=y
 CONFIG_RAMDISK=y

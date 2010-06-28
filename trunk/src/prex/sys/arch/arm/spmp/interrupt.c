@@ -128,7 +128,7 @@ interrupt_handler(void)
 	for (vector = 0; vector < NIRQS; vector++) {
 		if (bits & (uint64_t)(1 << vector))
 			break;
-	}	
+	}
 
 	if(vector == NIRQS)
 		return;
@@ -162,5 +162,5 @@ interrupt_init(void)
 	IRQ_MASK = 0;
 	IRQ_ENABLE = 0;
 
-	interrupt_enable();
+//	interrupt_enable();
 }

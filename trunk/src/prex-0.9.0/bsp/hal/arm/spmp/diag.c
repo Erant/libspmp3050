@@ -32,9 +32,8 @@
  */
 
 #include <kernel.h>
-#include <syspage.h>
 #include <cpu.h>
-#include <platform.h>
+#include "platform.h"
 
 #ifdef DEBUG
 
@@ -49,7 +48,7 @@ serial_putc(char c)
 }
 #endif /* CONFIG_DIAG_SERIAL */
 
-void diag_print(char *buf){
+void diag_puts(char *buf){
 
 #ifdef CONFIG_DIAG_SERIAL
 	while (*buf) {
