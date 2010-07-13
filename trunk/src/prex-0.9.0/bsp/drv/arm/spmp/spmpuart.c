@@ -45,6 +45,12 @@
 #define DPRINTF(a)
 #endif
 
+#define EXT_CLK		12000000
+#define	UART_SPEED	115200
+#define	UART_CLKDIV	EXT_CLK / UART_SPEED
+
+#define UART_IRQCLR		(*(volatile uint8_t*)(0x100010c0))
+
 #define	UART_N	1
 #define SERIAL_IRQ	3
 
@@ -81,7 +87,7 @@ static struct serial_port spmpuart_port;
 static void
 spmpuart_xmt_char(struct serial_port *sp, char c)
 {
-//	while(UART_STATUS(UART_N) & UART_TX_BUSY);
+	while(UART_STATUS(UART_N) & UART_TX_BUSY);
 	UART_FIFO(UART_N) = c;
 }
 
@@ -95,14 +101,10 @@ spmpuart_rcv_char(struct serial_port *sp)
 static void
 spmpuart_set_poll(struct serial_port *sp, int on)
 {
-
-	if (on) {
-		/*
-		 * Disable interrupt for polling mode.
-		 */
-		DPRINTF("[spmpuart] : enable polling mode\n");
-	} else DPRINTF("[spmpuart] : disable polling mode\n");
-
+	volatile unsigned char * uart_base = (volatile unsigned char*)UART(UART_N);
+	
+	if (on) uart_base[0x6] = 0;			// disable irq
+	else uart_base[0x6] = UART_IRQ_RX;	// enable irq
 }
 
 static int
@@ -110,15 +112,16 @@ spmpuart_isr(void *arg)
 {
 	struct serial_port *sp = arg;
 	uint32_t irq_lo;
+	char c;
+	
+//	UART_IRQCLR = 8;
 
-DPRINTF("irq_ser\n");
 	while(1) {
-		if (!(UART_STATUS(UART_N) & UART_RX_VALID)) break;
-		serial_rcv_char(sp, UART_FIFO(UART_N));
+		if ((UART_STATUS(UART_N) & 4) == 4) break;
+		c = UART_FIFO(UART_N);
+		if (c != 0) serial_rcv_char(sp, c);
+		else break;
 	}
-
-	irq_lo = IRQ_FLAG_LO;
-	IRQ_FLAG_LO = irq_lo | (1 << SERIAL_IRQ);
 
 	return 0;
 }
@@ -128,36 +131,23 @@ spmpuart_start(struct serial_port *sp)
 {
 	uint32_t flag;
 	
-	DPRINTF("[spmpuart] : START\n");
-	
 	/* Initialize port */
-	volatile unsigned char * uart_base = (volatile unsigned char*)UART(UART_N);
+	volatile unsigned char  * uart_base   = (volatile unsigned char*)UART(UART_N);
+	volatile unsigned short * uart_clkdiv = *((volatile unsigned short*)UART(UART_N));
 	
 	/* Magic values gleaned from the disasm */
-	uart_base[0x0] = 0x68;
-	uart_base[0x1] = 0x00;
+	uart_clkdiv    = UART_CLKDIV;
 	uart_base[0x4] = 0xD0;
 	uart_base[0x5] = 0x11;
 	uart_base[0xF] = 0x88;
+//	uart_base[0x9] = 4;
+	uart_base[0x6] = UART_IRQ_RX;
 	
-	UART_IRQ_REG(UART_N) |= UART_IRQ_RX;
-	UART_ENABLE(UART_N);
-
-	/* Create device object *
-	serial_dev = device_create(&serial_io, "console", DF_CHR);
-	ASSERT(serial_dev);
-
-	tty_attach(&serial_io, &serial_tty);*/
-	
-	DPRINTF("[spmpuart] : START - attach irq\n");
 	sp->irq = irq_attach(SERIAL_IRQ, IPL_COMM, 0, &spmpuart_isr, IST_NONE, sp);
-	DPRINTF("[spmpuart] : START - attach irq done\n");
-/*	ASSERT(serial_irq != NULL);
-*/
+
 	IRQ_ENABLE_LO |= 1 << SERIAL_IRQ;
 	IRQ_MASK_LO |= 1 << SERIAL_IRQ;
 
-	DPRINTF("[spmpuart] : initialized\n");
 	return 0;
 }
 
@@ -170,8 +160,6 @@ spmpuart_stop(struct serial_port *sp)
 static int
 spmpuart_init(struct driver *self)
 {
-	DPRINTF("[spmpuart] : INIT\n");
-//	serial_attach(&spmpuart_ops, &spmpuart_port);
-	DPRINTF("[spmpuart] : INIT okay\n");
+	serial_attach(&spmpuart_ops, &spmpuart_port);
 	return 0;
 }
